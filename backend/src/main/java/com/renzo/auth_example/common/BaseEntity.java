@@ -22,7 +22,7 @@ public abstract class BaseEntity {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false, updatable = false)
-    private String createdBy;
+    private String createdBy = "pending";
 
     @Column(nullable = true, updatable = true)
     private String updatedBy;
