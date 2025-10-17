@@ -1,8 +1,9 @@
 package com.renzo.auth_example.user;
 
-import com.renzo.auth_example.user.dto.UserRequest;
+import com.renzo.auth_example.user.dto.UserCreateRequest;
 import com.renzo.auth_example.user.dto.UserResponse;
-import jakarta.persistence.EntityNotFoundException;
+import com.renzo.auth_example.user.dto.UserUpdateRequest;
+import com.renzo.auth_example.user.exceptions.UserNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,18 +26,33 @@ public class UserService {
     public UserResponse findById(Long id) {
         return userRepository.findById(id)
                 .map(userMapper::toResponse)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id = " + id + "."));
+                .orElseThrow(() -> new UserNotFoundException("id", id));
     }
 
     public UserResponse findByEmail(String email) {
         return userRepository.findByEmail(email)
                 .map(userMapper::toResponse)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with email = " + email + "."));
+                .orElseThrow(() -> new UserNotFoundException("email", email));
     }
 
-    public UserResponse createUser(UserRequest userRequest) {
+    public UserResponse createUser(UserCreateRequest userRequest) {
         User user = userMapper.toEntity(userRequest);
         User persistedUser = userRepository.save(user);
         return userMapper.toResponse(persistedUser);
+    }
+
+    public UserResponse updateUser(Long id, UserUpdateRequest userRequest) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("id", id));
+
+        userMapper.updateEntity(existingUser, userRequest);
+        User updatedUser = userRepository.save(existingUser);
+        return userMapper.toResponse(updatedUser);
+    }
+
+    public void deleteUser(Long id) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("id", id));
+        userRepository.delete(existingUser);
     }
 }
