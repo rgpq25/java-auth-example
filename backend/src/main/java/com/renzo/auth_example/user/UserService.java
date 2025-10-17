@@ -26,13 +26,13 @@ public class UserService {
     public UserResponse findById(Long id) {
         return userRepository.findById(id)
                 .map(userMapper::toResponse)
-                .orElseThrow(() -> new EntityNotFoundException("User not found."));
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id = " + id + "."));
     }
 
     public UserResponse findByEmail(String email) {
         return userRepository.findByEmail(email)
                 .map(userMapper::toResponse)
-                .orElseThrow(() -> new EntityNotFoundException("User not found."));
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email = " + email + "."));
     }
 
     public UserResponse createUser(UserRequest userRequest) {

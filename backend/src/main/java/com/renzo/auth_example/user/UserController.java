@@ -2,14 +2,13 @@ package com.renzo.auth_example.user;
 
 import com.renzo.auth_example.user.dto.UserRequest;
 import com.renzo.auth_example.user.dto.UserResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
@@ -38,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping("")
-    public ResponseEntity<UserResponse> save(@Validated @RequestBody UserRequest user) {
+    public ResponseEntity<UserResponse> save(@Valid @RequestBody UserRequest user) {
         UserResponse savedUser = userService.createUser(user);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
