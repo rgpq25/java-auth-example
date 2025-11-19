@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleEntityNotFoundExceptions(EntityNotFoundException e) {
         ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage("Resource Not Found");
+        errorResponse.setMessage("Resource Not Found.");
         errorResponse.setErrors(List.of(e.getMessage()));
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage("Conflict");
+        errorResponse.setMessage("Conflict.");
         errorResponse.setErrors(List.of(ex.getMessage()));
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
