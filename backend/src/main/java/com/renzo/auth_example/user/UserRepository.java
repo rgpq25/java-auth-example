@@ -9,6 +9,6 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByIsActiveTrue();
-    Optional<User> findByIdAndIsActiveTrue(Long id);
+    Optional<User> findByUserIdAndIsActiveTrue(Long id);
     Optional<User> findByEmailAndIsActiveTrue(String email);
 }

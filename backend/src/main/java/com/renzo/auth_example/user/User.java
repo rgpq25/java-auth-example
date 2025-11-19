@@ -1,15 +1,17 @@
 package com.renzo.auth_example.user;
 
 import com.renzo.auth_example.common.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.util.Objects;
 
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long userId;
+
     @Column(nullable = false)
     private String name;
 
@@ -22,13 +24,24 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
-    protected User() { super(); }
+    protected User() {
+        super();
+    }
 
     public User(String name, String lastname, String email, String password) {
+        super();
         this.name = name;
         this.lastname = lastname;
         this.email = email;
         this.password = password;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getName() {

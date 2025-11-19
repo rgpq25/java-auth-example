@@ -20,7 +20,7 @@ public class UserMapper {
     public UserResponse toResponse(User entity) {
         if (entity == null) return null;
         return new UserResponse(
-                entity.getId(),
+                entity.getUserId(),
                 entity.getName(),
                 entity.getLastname(),
                 entity.getEmail()

@@ -26,7 +26,7 @@ public class UserService {
     }
 
     public UserResponse findById(Long id) {
-        return userRepository.findByIdAndIsActiveTrue(id)
+        return userRepository.findByUserIdAndIsActiveTrue(id)
                 .map(userMapper::toResponse)
                 .orElseThrow(() -> new UserNotFoundException("id", id));
     }
@@ -42,19 +42,18 @@ public class UserService {
                 .ifPresent(u -> {
                     throw new DataIntegrityViolationException("User with email already exists: " + userRequest.email());
                 });
-
         User user = userMapper.toEntity(userRequest);
         User persistedUser = userRepository.save(user);
         return userMapper.toResponse(persistedUser);
     }
 
     public UserResponse updateUser(Long id, UserUpdateRequest userRequest) {
-        User existingUser = userRepository.findByIdAndIsActiveTrue(id)
+        User existingUser = userRepository.findByUserIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new UserNotFoundException("id", id));
 
         userRepository.findByEmailAndIsActiveTrue(userRequest.email())
             .ifPresent(u -> {
-                if (!Objects.equals(u.getId(), existingUser.getId())) throw new DataIntegrityViolationException("User with email already exists: " + userRequest.email());
+                if (!Objects.equals(u.getUserId(), existingUser.getUserId())) throw new DataIntegrityViolationException("User with email already exists: " + userRequest.email());
             });
 
         userMapper.updateEntity(existingUser, userRequest);
