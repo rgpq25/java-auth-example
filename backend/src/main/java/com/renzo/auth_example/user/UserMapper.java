@@ -1,13 +1,13 @@
 package com.renzo.auth_example.user;
 
-import com.renzo.auth_example.user.dto.UserCreateRequest;
+import com.renzo.auth_example.auth.dto.UserRegisterRequest;
 import com.renzo.auth_example.user.dto.UserResponse;
 import com.renzo.auth_example.user.dto.UserUpdateRequest;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserMapper {
-    public User toEntity(UserCreateRequest dto) {
+    public User toEntity(UserRegisterRequest dto) {
         if (dto == null) return null;
         return new User(
                 dto.name(),

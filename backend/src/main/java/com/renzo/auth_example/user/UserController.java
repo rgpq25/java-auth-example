@@ -1,6 +1,6 @@
 package com.renzo.auth_example.user;
 
-import com.renzo.auth_example.user.dto.UserCreateRequest;
+import com.renzo.auth_example.auth.dto.UserRegisterRequest;
 import com.renzo.auth_example.user.dto.UserResponse;
 import com.renzo.auth_example.user.dto.UserUpdateRequest;
 import jakarta.validation.Valid;
@@ -16,9 +16,11 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    private final UserMapper userMapper;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserMapper userMapper) {
         this.userService = userService;
+        this.userMapper = userMapper;
     }
 
     @GetMapping("")
@@ -34,19 +36,9 @@ public class UserController {
 
     @GetMapping("/search")
     public ResponseEntity<UserResponse> findByEmail(@RequestParam String email) {
-        UserResponse user = userService.findByEmail(email);
-        return ResponseEntity.ok(user);
-    }
-
-    @PostMapping("")
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserCreateRequest user) {
-        UserResponse savedUser = userService.createUser(user);
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(savedUser.id())
-                .toUri();
-        return ResponseEntity.created(location).body(savedUser);
+        User user = userService.findByEmail(email);
+        UserResponse userResponse = userMapper.toResponse(user);
+        return ResponseEntity.ok(userResponse);
     }
 
     @PutMapping("/{id}")

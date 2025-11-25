@@ -1,6 +1,5 @@
 package com.renzo.auth_example.user;
 
-import com.renzo.auth_example.user.dto.UserCreateRequest;
 import com.renzo.auth_example.user.dto.UserResponse;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -8,8 +7,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(UserController.class)

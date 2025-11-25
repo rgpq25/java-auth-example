@@ -1,6 +1,5 @@
 package com.renzo.auth_example.user;
 
-import com.renzo.auth_example.user.dto.UserCreateRequest;
 import com.renzo.auth_example.user.dto.UserResponse;
 import com.renzo.auth_example.user.exceptions.UserNotFoundException;
 import org.junit.jupiter.api.*;

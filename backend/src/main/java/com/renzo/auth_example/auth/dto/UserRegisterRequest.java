@@ -1,10 +1,10 @@
-package com.renzo.auth_example.user.dto;
+package com.renzo.auth_example.auth.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Email;
 
-public record UserCreateRequest(
+public record UserRegisterRequest(
         @NotNull(message = "Name is required.")
         @NotBlank(message = "Name can't be blank.")
         String name,

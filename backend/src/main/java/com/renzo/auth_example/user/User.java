@@ -1,8 +1,10 @@
 package com.renzo.auth_example.user;
 
+import com.renzo.auth_example.auth.models.Token;
 import com.renzo.auth_example.common.BaseEntity;
 import jakarta.persistence.*;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -23,6 +25,9 @@ public class User extends BaseEntity {
 
     @Column(nullable = false)
     private String password;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Token> tokens;
 
     protected User() {
         super();
