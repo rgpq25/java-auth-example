@@ -4,8 +4,10 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -50,6 +52,22 @@ public class GlobalExceptionHandler {
         errorResponse.setErrors(List.of("Authentication failed."));
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setMessage("Request body is required and must be valid JSON");
+        errorResponse.setErrors(List.of("Bad Request"));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestCookieException(MissingRequestCookieException ex) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setMessage("Missing required cookie");
+        errorResponse.setErrors(List.of("Bad Request"));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
 //    @ExceptionHandler(Exception.class)

@@ -3,6 +3,8 @@ package com.renzo.auth_example.config;
 import com.renzo.auth_example.auth.models.Token;
 import com.renzo.auth_example.auth.repositories.TokenRepository;
 import com.renzo.auth_example.auth.services.TokenService;
+import jakarta.servlet.http.Cookie;
+import org.apache.coyote.BadRequestException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -13,6 +15,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.bind.annotation.CookieValue;
+
+import java.util.Arrays;
+import java.util.Optional;
 
 
 @Configuration
@@ -32,10 +38,8 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
-                        req.requestMatchers("/auth/**")
-                                .permitAll()
-                                .anyRequest()
-                                .authenticated()
+                        req.requestMatchers("/auth/**", "/error").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
@@ -43,8 +47,11 @@ public class SecurityConfig {
                 .logout(logout ->
                         logout.logoutUrl("/auth/logout")
                                 .addLogoutHandler((request, response, authentication) -> {
-                                    String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-                                    logout(authHeader);
+                                    Optional<Cookie> refreshTokenCookie = Arrays.stream(request.getCookies())
+                                            .filter(c -> c.getName().equals("refreshToken"))
+                                            .findFirst();
+                                    if (refreshTokenCookie.isEmpty()) throw new IllegalArgumentException("Invalid Refresh Token");
+                                    logout(refreshTokenCookie.get().getValue());
                                 })
                                 .logoutSuccessHandler((request, response, authentication) ->
                                         SecurityContextHolder.clearContext())
@@ -53,12 +60,11 @@ public class SecurityConfig {
     }
 
     private void logout (String token) {
-        if (token == null || !token.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Invalid Token");
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Invalid Refresh Token");
         }
-        String refreshToken = token.substring(7);
-        Token foundToken = tokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid Token"));
+        Token foundToken = tokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid Refresh Token"));
         foundToken.setExpired(true);
         foundToken.setRevoked(true);
         tokenRepository.save(foundToken);

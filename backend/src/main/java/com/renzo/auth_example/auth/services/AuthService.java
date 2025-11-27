@@ -1,10 +1,10 @@
 package com.renzo.auth_example.auth.services;
 
 import com.renzo.auth_example.auth.dto.LoginRequest;
+import com.renzo.auth_example.auth.dto.TokenPair;
 import com.renzo.auth_example.auth.dto.TokenResponse;
 import com.renzo.auth_example.auth.dto.UserRegisterRequest;
 import com.renzo.auth_example.auth.models.Token;
-import com.renzo.auth_example.auth.repositories.TokenRepository;
 import com.renzo.auth_example.user.User;
 import com.renzo.auth_example.user.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,15 +27,15 @@ public class AuthService {
         this.authManager = authManager;
     }
 
-    public TokenResponse register(UserRegisterRequest request) {
+    public TokenPair register(UserRegisterRequest request) {
         User user = userService.createUser(request);
         String jwtToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
         saveUserToken(user, refreshToken);
-        return new TokenResponse(jwtToken, refreshToken);
+        return new TokenPair(jwtToken, refreshToken);
     }
 
-    public TokenResponse login(LoginRequest request) {
+    public TokenPair login(LoginRequest request) {
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.email(),
@@ -47,15 +47,14 @@ public class AuthService {
         String jwtToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
         saveUserToken(user, refreshToken);
-        return new TokenResponse(jwtToken, refreshToken);
+        return new TokenPair(jwtToken, refreshToken);
     }
 
-    public TokenResponse refreshToken(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("Invalid Bearer Token");
+    public String refreshAccessToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new IllegalArgumentException("Invalid Refresh Token");
         }
 
-        final String refreshToken = authHeader.substring(7);
         final Optional<String> userEmail = jwtService.extractUsername(refreshToken);
 
         if (userEmail.isEmpty()) {
@@ -68,8 +67,7 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid Refresh Token");
         }
 
-        String accessToken = jwtService.generateToken(user);
-        return new TokenResponse(accessToken, refreshToken);
+        return jwtService.generateToken(user);
     }
 
     private void saveUserToken(User user, String jwtToken) {
