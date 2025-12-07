@@ -72,12 +72,12 @@ public class AuthController {
                 .path("/auth")
                 .maxAge(refreshExpiration);
 
-        if (isProd) {   // PROD: cross-site friendly
+        if (isProd) {
             builder
                     .secure(true)
                     .sameSite("None")
                     .domain("TODO PROD URL");
-        } else {        // DEV: works over http://localhost
+        } else {
             builder
                     .secure(false)
                     .sameSite("Lax");
