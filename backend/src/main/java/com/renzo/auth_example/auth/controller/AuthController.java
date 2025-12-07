@@ -7,6 +7,7 @@ import com.renzo.auth_example.auth.dto.UserRegisterRequest;
 import com.renzo.auth_example.auth.services.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,9 @@ import java.util.Arrays;
 public class AuthController {
     private final AuthService authService;
     private final Environment environment;
+
+    @Value("${application.security.jwt.refresh-token.expiration}")
+    private long refreshExpiration;
 
     public AuthController(AuthService authService, Environment environment) {
         this.authService = authService;
@@ -65,8 +69,8 @@ public class AuthController {
         ResponseCookie.ResponseCookieBuilder builder = ResponseCookie
                 .from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .path("/auth/refresh")
-                .maxAge(7 * 24 * 60 * 60);
+                .path("/auth")
+                .maxAge(refreshExpiration);
 
         if (isProd) {   // PROD: cross-site friendly
             builder

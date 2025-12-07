@@ -6,6 +6,8 @@ import com.renzo.auth_example.user.dto.UserUpdateRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -23,6 +25,14 @@ public class UserController {
         this.userMapper = userMapper;
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> findProfile(Authentication authentication) {
+        UserDetails principal = (UserDetails) authentication.getPrincipal();
+        User user = userService.findByEmail(principal.getUsername());
+        UserResponse userResponse = userMapper.toResponse(user);
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
     @GetMapping("")
     public List<UserResponse> findAll() {
         return userService.findAll();
@@ -30,8 +40,9 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> findById(@PathVariable Long id) {
-        UserResponse user = userService.findById(id);
-        return ResponseEntity.ok(user);
+        User user = userService.findById(id);
+        UserResponse userResponse = userMapper.toResponse(user);
+        return ResponseEntity.ok(userResponse);
     }
 
     @GetMapping("/search")

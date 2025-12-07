@@ -28,9 +28,8 @@ public class UserService {
         return users.stream().map(userMapper::toResponse).toList();
     }
 
-    public UserResponse findById(Long id) {
+    public User findById(Long id) {
         return userRepository.findByUserIdAndIsActiveTrue(id)
-                .map(userMapper::toResponse)
                 .orElseThrow(() -> new UserNotFoundException("id", id));
     }
 

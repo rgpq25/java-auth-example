@@ -2,10 +2,12 @@ package com.renzo.auth_example.auth.services;
 
 import com.renzo.auth_example.user.User;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -22,13 +24,9 @@ public class JwtService {
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshExpiration;
 
-    public Optional<String> extractUsername(final String token) {
-        final Claims jwtToken = Jwts.parser()
-                .verifyWith(getSignKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-        return jwtToken.getSubject().describeConstable();
+    private SecretKey getSignKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateToken(final User user) {
@@ -42,37 +40,34 @@ public class JwtService {
     private String buildToken(final User user, final long expiration) {
         return Jwts.builder()
                 .id(user.getUserId().toString())
-                .claims(Map.of("name", user.getName()))
                 .subject(user.getEmail())
+                .claims(Map.of("name", user.getName()))
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignKey())
                 .compact();
     }
 
-    public boolean isTokenValid(String token, User user) {
-        Optional<String> email = extractUsername(token);
-        if (email.isEmpty()) {
-            throw new IllegalArgumentException("Invalid Token;");
-        }
-        return (email.get().equals(user.getEmail())) && !isTokenExpired(token);
+    public String extractEmail(String token) {
+        return extractAllClaims(token).getSubject();
     }
 
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+    public boolean isTokenValid(String token, String userEmail) {
+        Claims claims = extractAllClaims(token);
+        String email = claims.getSubject();
+        Date expiration = claims.getExpiration();
+        boolean notExpired = expiration != null && expiration.after(new Date());
+
+        return email != null
+                && email.equals(userEmail)
+                && notExpired;
     }
 
-    private Date extractExpiration(final String token) {
-        final Claims jwtToken = Jwts.parser()
+    private Claims extractAllClaims(String token) throws JwtException {
+        return Jwts.parser()
                 .verifyWith(getSignKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        return jwtToken.getExpiration();
-    }
-
-    private SecretKey getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

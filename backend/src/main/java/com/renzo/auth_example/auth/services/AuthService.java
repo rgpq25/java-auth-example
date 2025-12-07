@@ -9,6 +9,7 @@ import com.renzo.auth_example.user.User;
 import com.renzo.auth_example.user.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -29,9 +30,18 @@ public class AuthService {
 
     public TokenPair register(UserRegisterRequest request) {
         User user = userService.createUser(request);
+
         String jwtToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
         saveUserToken(user, refreshToken);
+
+        authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.email(),
+                        request.password()
+                )
+        );
+
         return new TokenPair(jwtToken, refreshToken);
     }
 
@@ -52,19 +62,22 @@ public class AuthService {
 
     public String refreshAccessToken(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new IllegalArgumentException("Invalid Refresh Token");
+            throw new IllegalArgumentException("Invalid Refresh Token"); // No refresh token present
         }
 
-        final Optional<String> userEmail = jwtService.extractUsername(refreshToken);
-
-        if (userEmail.isEmpty()) {
-            throw new IllegalArgumentException("Invalid Refresh Token");
+        Optional<Token> savedRefreshToken = tokenService.getTokenByTokenString(refreshToken);
+        if (savedRefreshToken.isEmpty() || savedRefreshToken.get().isRevoked()) {
+            throw new IllegalArgumentException("Invalid Refresh Token"); // Refresh token doesnt exist / has been invalidated
         }
 
-        final User user =  userService.findByEmail(userEmail.get());
+        String userEmail = jwtService.extractEmail(savedRefreshToken.get().getToken());
+        if (userEmail == null || userEmail.isEmpty()) {
+            throw new IllegalArgumentException("Invalid Refresh Token"); // When extracting claims from the token something went wrong
+        }
 
-        if (!jwtService.isTokenValid(refreshToken, user)) {
-            throw new IllegalArgumentException("Invalid Refresh Token");
+        User user = userService.findByEmail(userEmail);
+        if (!jwtService.isTokenValid(refreshToken, user.getEmail())) {
+            throw new IllegalArgumentException("Invalid Refresh Token"); // Token is expired / doesn't belong to the user
         }
 
         return jwtService.generateToken(user);
