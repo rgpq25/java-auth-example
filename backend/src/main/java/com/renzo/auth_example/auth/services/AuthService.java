@@ -1,40 +1,70 @@
 package com.renzo.auth_example.auth.services;
 
-import com.renzo.auth_example.auth.dto.LoginRequest;
-import com.renzo.auth_example.auth.dto.TokenPair;
-import com.renzo.auth_example.auth.dto.TokenResponse;
-import com.renzo.auth_example.auth.dto.UserRegisterRequest;
-import com.renzo.auth_example.auth.models.Token;
-import com.renzo.auth_example.user.User;
-import com.renzo.auth_example.user.UserService;
+import com.renzo.auth_example.auth.dto.*;
+import com.renzo.auth_example.auth.exceptions.InvalidVerificationCodeException;
+import com.renzo.auth_example.auth.exceptions.VerificationExpiredException;
+import com.renzo.auth_example.auth.models.RefreshToken;
+import com.renzo.auth_example.auth.models.Verification;
+import com.renzo.auth_example.mail.MailService;
+import com.renzo.auth_example.mail.exceptions.MailSendingException;
+import com.renzo.auth_example.user.exceptions.UserNotFoundException;
+import com.renzo.auth_example.user.models.User;
+import com.renzo.auth_example.user.services.UserService;
+import io.jsonwebtoken.JwtException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.Optional;
 
 @Service
 public class AuthService {
     private final UserService userService;
+    private final AccountService accountService;
+    private final VerificationService verificationService;
     private final JwtService jwtService;
-    private final TokenService tokenService;
+    private final MailService mailService;
+    private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authManager;
 
-    public AuthService(UserService userService, JwtService jwtService, TokenService tokenService, AuthenticationManager authManager) {
+    public AuthService(
+            UserService userService,
+            AccountService accountService,
+            VerificationService verificationService,
+            JwtService jwtService,
+            MailService mailService,
+            RefreshTokenService refreshTokenService,
+            AuthenticationManager authManager
+    ) {
         this.userService = userService;
+        this.accountService = accountService;
+        this.verificationService = verificationService;
         this.jwtService = jwtService;
-        this.tokenService = tokenService;
+        this.mailService = mailService;
+        this.refreshTokenService = refreshTokenService;
         this.authManager = authManager;
     }
 
     public TokenPair register(UserRegisterRequest request) {
         User user = userService.createUser(request);
+        accountService.createCredentialsAccount(user, request.password());
+        String verificationCode = verificationService.createEmailVerification(user.getEmail());
 
-        String jwtToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-        saveUserToken(user, refreshToken);
+        try {
+            mailService.sendEmailVerificationCode(user.getEmail(), verificationCode);
+        } catch (MailSendingException ignored) {} // Exception is caught to continue registration. A user can later ask to be sent the email again.
 
+        JwtToken accessToken = jwtService.generateAccessToken(user);
+        JwtToken refreshToken = jwtService.generateRefreshToken(user);
+        refreshTokenService.createRefreshToken(user, refreshToken);
+
+        return new TokenPair(accessToken, refreshToken);
+    }
+
+    public TokenPair loginCredentials(LoginCredentialsRequest request) {
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.email(),
@@ -42,55 +72,65 @@ public class AuthService {
                 )
         );
 
-        return new TokenPair(jwtToken, refreshToken);
+        User user = userService.findByEmail(request.email())
+                .orElseThrow(() -> new UserNotFoundException("email", request.email()));
+
+        JwtToken accessToken = jwtService.generateAccessToken(user);
+        JwtToken refreshToken = jwtService.generateRefreshToken(user);
+        refreshTokenService.createRefreshToken(user, refreshToken);
+
+        return new TokenPair(accessToken, refreshToken);
     }
 
-    public TokenPair login(LoginRequest request) {
-        authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.email(),
-                        request.password()
-                )
-        );
+    public void verifyEmail(String email, String code) {
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("email", email));
 
-        User user = userService.findByEmail(request.email());
-        String jwtToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-        saveUserToken(user, refreshToken);
-        return new TokenPair(jwtToken, refreshToken);
-    }
+        Verification pendingVerification = verificationService.getPendingVerification(email, Verification.VerificationType.EMAIL_VERIFICATION, code)
+                .orElseThrow(() -> new InvalidVerificationCodeException("Invalid verification code."));
 
-    public String refreshAccessToken(String refreshToken) {
-        if (refreshToken == null || refreshToken.isBlank()) {
-            throw new IllegalArgumentException("Invalid Refresh Token"); // No refresh token present
+        if (pendingVerification.getExpiresAt().before(new Date())) {
+            throw new VerificationExpiredException("Verification code has expired.");
         }
 
-        Optional<Token> savedRefreshToken = tokenService.getTokenByTokenString(refreshToken);
+        user.setEmailVerified(true);
+        userService.save(user);
+        verificationService.delete(pendingVerification);
+    }
+
+    public void resendVerificationEmail(String email) {
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("email", email));
+
+        verificationService.deleteAllEmailVerifications(user.getEmail());
+        String verificationCode = verificationService.createEmailVerification(user.getEmail());
+        mailService.sendEmailVerificationCode(user.getEmail(), verificationCode);
+    }
+
+    public JwtToken refreshAccessToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new JwtException("Invalid refresh token"); // No refresh token present
+        }
+
+        Optional<RefreshToken> savedRefreshToken = refreshTokenService.getTokenByTokenString(refreshToken);
         if (savedRefreshToken.isEmpty() || savedRefreshToken.get().isRevoked()) {
-            throw new IllegalArgumentException("Invalid Refresh Token"); // Refresh token doesnt exist / has been invalidated
+            System.out.println("The token is non-existent / is revoked");
+            throw new JwtException("Invalid refresh token"); // Refresh token doesnt exist / has been invalidated
         }
 
         String userEmail = jwtService.extractEmail(savedRefreshToken.get().getToken());
         if (userEmail == null || userEmail.isEmpty()) {
-            throw new IllegalArgumentException("Invalid Refresh Token"); // When extracting claims from the token something went wrong
+            System.out.println("No user found for the token");
+            throw new JwtException("Invalid refresh token"); // When extracting claims from the token something went wrong
         }
 
-        User user = userService.findByEmail(userEmail);
+        User user = userService.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("email", userEmail));
         if (!jwtService.isTokenValid(refreshToken, user.getEmail())) {
-            throw new IllegalArgumentException("Invalid Refresh Token"); // Token is expired / doesn't belong to the user
+            System.out.println("Token is not valid");
+            throw new JwtException("Invalid refresh token"); // Token is expired / doesn't belong to the user
         }
 
-        return jwtService.generateToken(user);
-    }
-
-    private void saveUserToken(User user, String jwtToken) {
-        Token token = new Token(
-            jwtToken,
-            Token.TokenType.BEARER,
-            false,
-            false,
-            user
-        );
-        tokenService.saveToken(token);
+        return jwtService.generateAccessToken(user);
     }
 }

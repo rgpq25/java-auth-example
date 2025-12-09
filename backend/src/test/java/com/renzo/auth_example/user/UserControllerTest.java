@@ -1,6 +1,10 @@
 package com.renzo.auth_example.user;
 
+import com.renzo.auth_example.user.controllers.UserController;
 import com.renzo.auth_example.user.dto.UserResponse;
+import com.renzo.auth_example.user.models.User;
+import com.renzo.auth_example.user.repositories.UserRepository;
+import com.renzo.auth_example.user.services.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;

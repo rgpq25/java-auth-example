@@ -1,8 +1,9 @@
-package com.renzo.auth_example.user;
+package com.renzo.auth_example.user.mappers;
 
 import com.renzo.auth_example.auth.dto.UserRegisterRequest;
 import com.renzo.auth_example.user.dto.UserResponse;
 import com.renzo.auth_example.user.dto.UserUpdateRequest;
+import com.renzo.auth_example.user.models.User;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,26 +12,23 @@ public class UserMapper {
         if (dto == null) return null;
         return new User(
                 dto.name(),
-                dto.lastname(),
                 dto.email(),
-                dto.password()
+                false,
+                null
         );
     }
 
     public UserResponse toResponse(User entity) {
         if (entity == null) return null;
         return new UserResponse(
-                entity.getUserId(),
+                entity.getId(),
                 entity.getName(),
-                entity.getLastname(),
                 entity.getEmail()
         );
     }
 
     public void updateEntity(User entity, UserUpdateRequest dto) {
         entity.setName(dto.name());
-        entity.setLastname(dto.lastname());
         entity.setEmail(dto.email());
-        entity.setPassword(dto.password());
     }
 }

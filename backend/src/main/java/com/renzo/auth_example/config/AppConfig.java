@@ -1,8 +1,9 @@
 package com.renzo.auth_example.config;
 
-import com.renzo.auth_example.user.User;
-import com.renzo.auth_example.user.UserRepository;
-import com.renzo.auth_example.user.exceptions.UserNotFoundException;
+import com.renzo.auth_example.auth.models.Account;
+import com.renzo.auth_example.user.models.User;
+import com.renzo.auth_example.auth.repositories.AccountRepository;
+import com.renzo.auth_example.user.repositories.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,20 +19,25 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class AppConfig {
 
     private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
 
-    public AppConfig(UserRepository userRepository) {
+    public AppConfig(UserRepository userRepository, AccountRepository accountRepository) {
         this.userRepository = userRepository;
+        this.accountRepository = accountRepository;
     }
 
     @Bean
     public UserDetailsService userDetailsService() {
         return email -> {
-            final User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new BadCredentialsException(""));
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new BadCredentialsException("Invalid user"));
+            Account account = accountRepository
+                    .findByUserEmailAndProviderId(email, Account.ProviderType.CREDENTIALS)
+                    .orElseThrow(() -> new BadCredentialsException("Invalid account"));
 
             return org.springframework.security.core.userdetails.User.builder()
                     .username(user.getEmail())
-                    .password(user.getPassword())
+                    .password(account.getPassword())
                     .build();
         };
     }

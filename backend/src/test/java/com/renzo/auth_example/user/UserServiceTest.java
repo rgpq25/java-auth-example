@@ -2,6 +2,10 @@ package com.renzo.auth_example.user;
 
 import com.renzo.auth_example.user.dto.UserResponse;
 import com.renzo.auth_example.user.exceptions.UserNotFoundException;
+import com.renzo.auth_example.user.mappers.UserMapper;
+import com.renzo.auth_example.user.models.User;
+import com.renzo.auth_example.user.repositories.UserRepository;
+import com.renzo.auth_example.user.services.UserService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

@@ -1,51 +1,63 @@
 package com.renzo.auth_example.auth.services;
 
-import com.renzo.auth_example.user.User;
+import com.renzo.auth_example.auth.dto.JwtToken;
+import com.renzo.auth_example.user.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class JwtService {
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
-    @Value("${application.security.jwt.expiration}")
-    private long jwtExpiration;
+    @Value("${application.security.jwt.access-token.expiration}")
+    private long accessTokenExpiration;
     @Value("${application.security.jwt.refresh-token.expiration}")
-    private long refreshExpiration;
+    private long refreshTokenExpiration;
 
     private SecretKey getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateToken(final User user) {
-        return buildToken(user, jwtExpiration);
+    public JwtToken generateAccessToken(final User user) {
+        return buildToken(user, accessTokenExpiration);
     }
 
-    public String generateRefreshToken(final User user) {
-        return buildToken(user, refreshExpiration);
+    public JwtToken generateRefreshToken(final User user) {
+        return buildToken(user, refreshTokenExpiration);
     }
 
-    private String buildToken(final User user, final long expiration) {
-        return Jwts.builder()
-                .id(user.getUserId().toString())
+    private JwtToken buildToken(final User user, final long expiration) {
+        Date now = new Date();
+        Date expiresAt = new Date(now.getTime() + expiration);
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", user.getId());
+        claims.put("name", user.getName());
+        claims.put("emailVerified", user.getEmailVerified());
+        claims.put("profilePicture", user.getProfileImage());
+
+        String token = Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(user.getEmail())
-                .claims(Map.of("name", user.getName()))
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .claims(claims)
+                .issuedAt(now)
+                .expiration(expiresAt)
                 .signWith(getSignKey())
                 .compact();
+
+        return new JwtToken(token, expiresAt);
     }
 
     public String extractEmail(String token) {

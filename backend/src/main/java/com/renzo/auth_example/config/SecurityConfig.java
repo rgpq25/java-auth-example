@@ -1,14 +1,13 @@
 package com.renzo.auth_example.config;
 
-import com.renzo.auth_example.auth.models.Token;
-import com.renzo.auth_example.auth.repositories.TokenRepository;
-import com.renzo.auth_example.auth.services.TokenService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.renzo.auth_example.auth.models.RefreshToken;
+import com.renzo.auth_example.auth.repositories.RefreshTokenRepository;
+import com.renzo.auth_example.common.ErrorResponse;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
-import org.apache.coyote.BadRequestException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,10 +16,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -29,36 +28,57 @@ import java.util.Optional;
 public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
     private final JwtAuthFilter jwtAuthFilter;
-    private final TokenRepository tokenRepository;
-    private final HandlerExceptionResolver handlerExceptionResolver;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final ObjectMapper objectMapper;
 
-    public SecurityConfig (AuthenticationProvider authenticationProvider, JwtAuthFilter jwtAuthFilter, TokenRepository tokenRepository, HandlerExceptionResolver handlerExceptionResolver) {
+    public SecurityConfig (
+            AuthenticationProvider authenticationProvider,
+            JwtAuthFilter jwtAuthFilter,
+            RefreshTokenRepository refreshTokenRepository,
+            ObjectMapper objectMapper
+    ) {
         this.authenticationProvider = authenticationProvider;
         this.jwtAuthFilter = jwtAuthFilter;
-        this.tokenRepository = tokenRepository;
-        this.handlerExceptionResolver = handlerExceptionResolver;
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(req ->
-                        req.requestMatchers("/auth/**", "/error").permitAll()
+                .authorizeHttpRequests(req -> req
+                        .requestMatchers(
+                                "/auth/register",
+                                "/auth/login-credentials",
+                                "/auth/refresh"
+                        ).permitAll()
+                        .requestMatchers("/public/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .anonymous(AbstractHttpConfigurer::disable)
                 .exceptionHandling(ex -> ex
                         // Missing/invalid credentials → 401
                         .authenticationEntryPoint((request, response, authException) -> {
-                            handlerExceptionResolver.resolveException(request, response, null, authException);
+                            ErrorResponse errorResponse = new ErrorResponse();
+                            errorResponse.setMessage("Unauthorized");
+                            errorResponse.setErrors(List.of("Authentication is required."));
+
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType("application/json");
+                            objectMapper.writeValue(response.getWriter(), errorResponse);
                         })
                         // Authenticated but not enough privileges → 403
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            handlerExceptionResolver.resolveException(request, response, null, accessDeniedException);
+                            ErrorResponse errorResponse = new ErrorResponse();
+                            errorResponse.setMessage("Forbidden");
+                            errorResponse.setErrors(List.of("You do not have permission."));
+
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            response.setContentType("application/json");
+                            objectMapper.writeValue(response.getWriter(), errorResponse);
                         })
                 )
                 .logout(logout ->
@@ -90,9 +110,9 @@ public class SecurityConfig {
         if (token == null || token.isBlank()) {
             throw new IllegalArgumentException("Invalid Refresh Token");
         }
-        Token foundToken = tokenRepository.findByToken(token)
+        RefreshToken foundRefreshToken = refreshTokenRepository.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid Refresh Token"));
-        foundToken.setRevoked(true);
-        tokenRepository.save(foundToken);
+        foundRefreshToken.setRevoked(true);
+        refreshTokenRepository.save(foundRefreshToken);
     }
 }

@@ -52,8 +52,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
         ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage("Invalid username or password.");
-        errorResponse.setErrors(List.of("Authentication failed."));
+        errorResponse.setMessage("Authentication failed");
+        errorResponse.setErrors(List.of("Invalid email or password."));
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
@@ -61,8 +61,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage("Request body is required and must be valid JSON");
-        errorResponse.setErrors(List.of("Bad Request"));
+        errorResponse.setMessage("Bad Request");
+        errorResponse.setErrors(List.of("Request body is required and must be valid JSON."));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
@@ -80,22 +80,6 @@ public class GlobalExceptionHandler {
         errorResponse.setMessage("Unauthorized");
         errorResponse.setErrors(List.of("Invalid token"));
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-    }
-
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage("Unauthorized");
-        errorResponse.setErrors(List.of());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage("Forbidden");
-        errorResponse.setErrors(List.of());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
 
 //    @ExceptionHandler(Exception.class)

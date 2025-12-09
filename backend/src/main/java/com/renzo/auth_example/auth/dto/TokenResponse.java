@@ -1,8 +1,0 @@
-package com.renzo.auth_example.auth.dto;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-public record TokenResponse(
-        String accessToken
-) {
-}

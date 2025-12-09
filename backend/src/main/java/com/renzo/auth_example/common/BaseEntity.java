@@ -8,6 +8,10 @@ import java.time.LocalDateTime;
 
 @MappedSuperclass
 public abstract class BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -16,16 +20,15 @@ public abstract class BaseEntity {
     @Column(nullable = true, updatable = true)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false, updatable = false)
-    private String createdBy = "pending";
-
-    @Column(nullable = true, updatable = true)
-    private String updatedBy;
-
-    @Column(nullable = false, updatable = true)
-    private Boolean isActive = true;
-
     protected BaseEntity() {}
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
@@ -41,30 +44,6 @@ public abstract class BaseEntity {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public Boolean getActive() {
-        return isActive;
-    }
-
-    public void setActive(Boolean active) {
-        isActive = active;
     }
 
 //    @Override

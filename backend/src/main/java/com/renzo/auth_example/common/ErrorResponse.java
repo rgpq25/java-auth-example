@@ -8,9 +8,9 @@ public class ErrorResponse {
     private List<String> errors;
     private LocalDateTime timestamp = LocalDateTime.now();
 
-    protected ErrorResponse() {}
+    public ErrorResponse() {}
 
-    protected ErrorResponse(String message, List<String> errors) {
+    public ErrorResponse(String message, List<String> errors) {
         this.message = message;
         this.errors = errors;
     }

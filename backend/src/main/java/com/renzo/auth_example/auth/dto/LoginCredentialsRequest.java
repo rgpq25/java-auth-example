@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record LoginRequest(
+public record LoginCredentialsRequest(
         @NotNull(message = "Email is required.")
         @NotBlank(message = "Email can't be blank.")
         @Email(message = "Email is not a valid email.")

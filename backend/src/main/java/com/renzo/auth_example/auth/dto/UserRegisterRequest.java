@@ -9,10 +9,6 @@ public record UserRegisterRequest(
         @NotBlank(message = "Name can't be blank.")
         String name,
 
-        @NotNull(message = "Lastname is required.")
-        @NotBlank(message = "Lastname can't be blank.")
-        String lastname,
-
         @NotNull(message = "Email is required.")
         @NotBlank(message = "Email can't be blank.")
         @Email(message = "Email is not a valid email.")

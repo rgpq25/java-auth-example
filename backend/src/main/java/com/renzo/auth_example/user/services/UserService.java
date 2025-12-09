@@ -1,60 +1,63 @@
-package com.renzo.auth_example.user;
+package com.renzo.auth_example.user.services;
 
 import com.renzo.auth_example.auth.dto.UserRegisterRequest;
+import com.renzo.auth_example.user.mappers.UserMapper;
 import com.renzo.auth_example.user.dto.UserResponse;
 import com.renzo.auth_example.user.dto.UserUpdateRequest;
 import com.renzo.auth_example.user.exceptions.UserNotFoundException;
+import com.renzo.auth_example.user.models.User;
+import com.renzo.auth_example.user.repositories.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
-        this.passwordEncoder = passwordEncoder;
     }
 
     public List<UserResponse> findAll() {
-        List<User> users = userRepository.findAllByIsActiveTrue();
+        List<User> users = userRepository.findAll();
         return users.stream().map(userMapper::toResponse).toList();
     }
 
-    public User findById(Long id) {
-        return userRepository.findByUserIdAndIsActiveTrue(id)
-                .orElseThrow(() -> new UserNotFoundException("id", id));
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
     }
 
-    public User findByEmail(String email) {
-        return userRepository.findByEmailAndIsActiveTrue(email)
-                .orElseThrow(() -> new UserNotFoundException("email", email));
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    public User save(User user) {
+        return userRepository.save(user);
     }
 
     public User createUser(UserRegisterRequest userRequest) {
-        userRepository.findByEmailAndIsActiveTrue(userRequest.email())
+        userRepository.findByEmail(userRequest.email())
                 .ifPresent(u -> {
                     throw new DataIntegrityViolationException("User with email already exists: " + userRequest.email());
                 });
+
         User user = userMapper.toEntity(userRequest);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
     public UserResponse updateUser(Long id, UserUpdateRequest userRequest) {
-        User existingUser = userRepository.findByUserIdAndIsActiveTrue(id)
+        User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("id", id));
 
-        userRepository.findByEmailAndIsActiveTrue(userRequest.email())
+        userRepository.findByEmail(userRequest.email())
             .ifPresent(u -> {
-                if (!Objects.equals(u.getUserId(), existingUser.getUserId())) throw new DataIntegrityViolationException("User with email already exists: " + userRequest.email());
+                if (!Objects.equals(u.getId(), existingUser.getId())) throw new DataIntegrityViolationException("User with email already exists: " + userRequest.email());
             });
 
         userMapper.updateEntity(existingUser, userRequest);
@@ -65,7 +68,6 @@ public class UserService {
     public void deleteUser(Long id) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("id", id));
-        existingUser.setActive(false);
-        userRepository.save(existingUser);
+        userRepository.deleteById(existingUser.getId());
     }
 }
