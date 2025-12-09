@@ -1,19 +1,43 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./App.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { Register, Login, Profile } from "./pages";
+import App from "./App.tsx";
+import AuthProvider from "./components/auth-provider.tsx";
+import ProtectedRoute from "./components/protected-route.tsx";
+import "./index.css";
+import { Login, Profile, Register, VerifyEmail } from "./pages";
 
 const router = createBrowserRouter([
-	{ path: "/", element: <App /> },
-	{ path: "/register", element: <Register /> },
-	{ path: "/login", element: <Login /> },
-	{ path: "/profile", element: <Profile /> },
+	{
+		path: "/",
+		element: (
+			<AuthProvider>
+				<App />
+			</AuthProvider>
+		),
+		children: [
+			{ path: "register", element: <Register /> },
+			{ path: "login", element: <Login /> },
+			{ path: "verify-email", element: <VerifyEmail /> },
+			{
+				path: "profile",
+				element: (
+					<ProtectedRoute>
+						<Profile />
+					</ProtectedRoute>
+				),
+			},
+		],
+	},
 ]);
+
+const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
-		<RouterProvider router={router} />
+		<QueryClientProvider client={queryClient}>
+			<RouterProvider router={router} />
+		</QueryClientProvider>
 	</StrictMode>
 );
