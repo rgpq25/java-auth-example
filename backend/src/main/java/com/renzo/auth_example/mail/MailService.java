@@ -43,4 +43,32 @@ public class MailService {
             throw new MailSendingException("Could not send verification email");
         }
     }
+
+    public void sendPasswordResetUrl(String emailToSend, String resetCode) {
+        String subject = "Password Reset";
+        String url = "http://localhost:5173/reset-password/?token=" + resetCode;
+        String htmlMessage = "<html>"
+                + "<body style=\"font-family: Arial, sans-serif;\">"
+                + "<div style=\"background-color: #f5f5f5; padding: 20px;\">"
+                + "<h2 style=\"color: #333;\">You requested your password to be reset.</h2>"
+                + "<p style=\"font-size: 16px;\">Please click on the following link to reset your password:</p>"
+                + "<div style=\"background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);\">"
+                + "<p style=\"font-size: 18px; font-weight: bold; color: #007bff;\">" + url + "</p>"
+                + "</div>"
+                + "</div>"
+                + "</body>"
+                + "</html>";
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(emailToSend);
+            helper.setSubject(subject);
+            helper.setText(htmlMessage, true);
+            mailSender.send(message);
+        } catch (MessagingException ex) {
+            System.out.println("Failed sending password reset email to " + emailToSend + ". Error: " + ex.getMessage());
+            throw new MailSendingException("Could not send password reset email");
+        }
+    }
 }

@@ -49,6 +49,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         || request.getServletPath().startsWith("/auth/register")
                         || request.getServletPath().startsWith("/auth/login-credentials")
                         || request.getServletPath().startsWith("/auth/refresh")
+                        || request.getServletPath().startsWith("/auth/password")
         ) {
             filterChain.doFilter(request, response);
             return;

@@ -37,7 +37,7 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    public User save(User user) {
+    public User updateUser(User user) {
         return userRepository.save(user);
     }
 

@@ -6,6 +6,8 @@ import com.renzo.auth_example.auth.repositories.AccountRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class AccountService {
     private final AccountRepository accountRepository;
@@ -14,6 +16,10 @@ public class AccountService {
     public AccountService(AccountRepository accountRepository, PasswordEncoder passwordEncoder) {
         this.accountRepository = accountRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public Optional<Account> findByEmailAndProviderId(String email, Account.ProviderType providerId) {
+        return accountRepository.findByUserEmailAndProviderId(email, providerId);
     }
 
     public Account createCredentialsAccount(final User user, String password) {
@@ -28,6 +34,10 @@ public class AccountService {
                 null,
                 passwordEncoder.encode(password)
         );
+        return accountRepository.save(account);
+    }
+
+    public Account updateAccount(Account account) {
         return accountRepository.save(account);
     }
 }

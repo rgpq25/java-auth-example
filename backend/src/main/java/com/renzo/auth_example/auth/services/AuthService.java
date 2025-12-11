@@ -12,6 +12,7 @@ import com.renzo.auth_example.user.models.User;
 import com.renzo.auth_example.user.services.UserService;
 import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -24,26 +25,23 @@ import java.util.Optional;
 public class AuthService {
     private final UserService userService;
     private final AccountService accountService;
-    private final VerificationService verificationService;
+    private final EmailVerificationService emailVerificationService;
     private final JwtService jwtService;
-    private final MailService mailService;
     private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authManager;
 
     public AuthService(
             UserService userService,
             AccountService accountService,
-            VerificationService verificationService,
+            EmailVerificationService emailVerificationService,
             JwtService jwtService,
-            MailService mailService,
             RefreshTokenService refreshTokenService,
             AuthenticationManager authManager
     ) {
         this.userService = userService;
         this.accountService = accountService;
-        this.verificationService = verificationService;
+        this.emailVerificationService = emailVerificationService;
         this.jwtService = jwtService;
-        this.mailService = mailService;
         this.refreshTokenService = refreshTokenService;
         this.authManager = authManager;
     }
@@ -51,11 +49,7 @@ public class AuthService {
     public TokenPair register(UserRegisterRequest request) {
         User user = userService.createUser(request);
         accountService.createCredentialsAccount(user, request.password());
-        String verificationCode = verificationService.createEmailVerification(user.getEmail());
-
-        try {
-            mailService.sendEmailVerificationCode(user.getEmail(), verificationCode);
-        } catch (MailSendingException ignored) {} // Exception is caught to continue registration. A user can later ask to be sent the email again.
+        emailVerificationService.sendVerificationEmail(user.getEmail());
 
         JwtToken accessToken = jwtService.generateAccessToken(user);
         JwtToken refreshToken = jwtService.generateRefreshToken(user);
@@ -82,33 +76,9 @@ public class AuthService {
         return new TokenPair(accessToken, refreshToken);
     }
 
-    public void verifyEmail(String email, String code) {
-        User user = userService.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("email", email));
-
-        Verification pendingVerification = verificationService.getPendingVerification(email, Verification.VerificationType.EMAIL_VERIFICATION, code)
-                .orElseThrow(() -> new InvalidVerificationCodeException("Invalid verification code."));
-
-        if (pendingVerification.getExpiresAt().before(new Date())) {
-            throw new VerificationExpiredException("Verification code has expired.");
-        }
-
-        user.setEmailVerified(true);
-        userService.save(user);
-        verificationService.delete(pendingVerification);
-    }
-
-    public void resendVerificationEmail(String email) {
-        User user = userService.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("email", email));
-
-        verificationService.deleteAllEmailVerifications(user.getEmail());
-        String verificationCode = verificationService.createEmailVerification(user.getEmail());
-        mailService.sendEmailVerificationCode(user.getEmail(), verificationCode);
-    }
-
     public JwtToken refreshAccessToken(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
+            System.out.println("The token is empty");
             throw new JwtException("Invalid refresh token"); // No refresh token present
         }
 

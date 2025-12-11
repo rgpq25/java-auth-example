@@ -19,21 +19,14 @@ public class VerificationService {
 
     public Optional<Verification> getPendingVerification(
             String identifier,
-            Verification.VerificationType verificationType,
-            String code
+            String code,
+            Verification.VerificationType verificationType
     ) {
         return verificationRepository.findFirstByIdentifierAndVerificationTypeAndValue(identifier, verificationType, code);
     }
 
-    @Transactional
-    public void delete(Verification verification) {
-        verificationRepository.deleteById(verification.getId());
-    }
-
     public String createEmailVerification(String identifier) {
-        SecureRandom random = new SecureRandom();
-        int code = random.nextInt(900000) + 100000;
-        String rawCode = String.valueOf(code);
+        String rawCode = generateRawCode();
         Date expiresAt = new Date(System.currentTimeMillis() + 300000); // 5 minutes
 
         Verification emailVerification = new Verification(
@@ -47,8 +40,39 @@ public class VerificationService {
         return rawCode;
     }
 
+    public String createPasswordResetVerification(String identifier) {
+        String rawCode = generateRawCode();
+        Date expiresAt = new Date(System.currentTimeMillis() + 300000); // 5 minutes
+
+        Verification passwordResetVerification = new Verification(
+                Verification.VerificationType.PASSWORD_RESET,
+                identifier,
+                rawCode, // TODO: Hash the generatedToken
+                expiresAt
+        );
+        verificationRepository.save(passwordResetVerification);
+
+        return rawCode;
+    }
+
+    @Transactional
+    public void delete(Verification verification) {
+        verificationRepository.deleteById(verification.getId());
+    }
+
     @Transactional
     public void deleteAllEmailVerifications(String identifier) {
         verificationRepository.deleteByIdentifierAndVerificationType(identifier, Verification.VerificationType.EMAIL_VERIFICATION);
+    }
+
+    @Transactional
+    public void deleteAllPasswordResetVerifications(String identifier) {
+        verificationRepository.deleteByIdentifierAndVerificationType(identifier, Verification.VerificationType.PASSWORD_RESET);
+    }
+
+    private String generateRawCode() {
+        SecureRandom random = new SecureRandom();
+        int code = random.nextInt(900000) + 100000;
+        return String.valueOf(code);
     }
 }
