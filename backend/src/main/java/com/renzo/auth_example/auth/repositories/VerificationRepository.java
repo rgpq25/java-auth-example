@@ -8,6 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface VerificationRepository extends JpaRepository<Verification, Long> {
-    Optional<Verification> findFirstByIdentifierAndVerificationTypeAndValue(String identifier, Verification.VerificationType verificationType, String value);
+    Optional<Verification> findFirstByIdentifierAndValueAndVerificationType(String identifier, String value, Verification.VerificationType verificationType);
     void deleteByIdentifierAndVerificationType(String identifier, Verification.VerificationType verificationType);
 }
