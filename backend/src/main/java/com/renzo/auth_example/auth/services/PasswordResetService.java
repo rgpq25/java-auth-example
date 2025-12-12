@@ -1,12 +1,10 @@
 package com.renzo.auth_example.auth.services;
 
 import com.renzo.auth_example.auth.exceptions.InvalidVerificationCodeException;
-import com.renzo.auth_example.auth.exceptions.VerificationExpiredException;
 import com.renzo.auth_example.auth.models.Account;
 import com.renzo.auth_example.auth.models.Verification;
 import com.renzo.auth_example.mail.MailService;
 import com.renzo.auth_example.mail.exceptions.MailSendingException;
-import com.renzo.auth_example.user.exceptions.UserNotFoundException;
 import com.renzo.auth_example.user.services.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -42,16 +40,16 @@ public class PasswordResetService {
         } catch (MailSendingException ignored) {}
     }
 
-    public void resetPassword(String token, String email, String password) {
-        Verification pendingVerification = verificationService.getPendingVerification(email, token, Verification.VerificationType.PASSWORD_RESET)
+    public void resetPassword(String token, String password) {
+        Verification pendingVerification = verificationService.getPendingVerification(token, Verification.VerificationType.PASSWORD_RESET)
                 .orElseThrow(() -> new InvalidVerificationCodeException("Invalid password reset token."));
 
         if (pendingVerification.getExpiresAt().before(new Date())) {
-            throw new VerificationExpiredException("Password reset token has expired.");
+            throw new InvalidVerificationCodeException("Invalid password reset token.");
         }
 
-        Account account = accountService.findByEmailAndProviderId(email, Account.ProviderType.CREDENTIALS)
-                .orElseThrow(() -> new UserNotFoundException("email", email));
+        Account account = accountService.findByEmailAndProviderId(pendingVerification.getIdentifier(), Account.ProviderType.CREDENTIALS)
+                .orElseThrow(() -> new InvalidVerificationCodeException("Invalid password reset token."));
         account.setPassword(passwordEncoder.encode(password));
         accountService.updateAccount(account);
         verificationService.delete(pendingVerification);

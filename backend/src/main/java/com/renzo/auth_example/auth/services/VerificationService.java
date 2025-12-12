@@ -20,16 +20,15 @@ public class VerificationService {
     }
 
     public Optional<Verification> getPendingVerification(
-            String identifier,
             String rawToken,
             Verification.VerificationType verificationType
     ) {
         String hashedToken = sha256Hex(rawToken);
-        return verificationRepository.findFirstByIdentifierAndValueAndVerificationType(identifier, hashedToken, verificationType);
+        return verificationRepository.findFirstByValueAndVerificationType(hashedToken, verificationType);
     }
 
     public String createEmailVerification(String identifier) {
-        String rawToken = generateRaw6DigitToken();
+        String rawToken = generateRawLongToken();
         String hashedToken = sha256Hex(rawToken);
         Date expiresAt = new Date(System.currentTimeMillis() + 300000); // 5 minutes
 
@@ -73,12 +72,6 @@ public class VerificationService {
     @Transactional
     public void deleteAllPasswordResetVerifications(String identifier) {
         verificationRepository.deleteByIdentifierAndVerificationType(identifier, Verification.VerificationType.PASSWORD_RESET);
-    }
-
-    private String generateRaw6DigitToken() {
-        SecureRandom random = new SecureRandom();
-        int code = random.nextInt(900000) + 100000;
-        return String.valueOf(code);
     }
 
     private String generateRawLongToken() {

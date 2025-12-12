@@ -1,24 +1,15 @@
 package com.renzo.auth_example.auth.services;
 
 import com.renzo.auth_example.auth.dto.*;
-import com.renzo.auth_example.auth.exceptions.InvalidVerificationCodeException;
-import com.renzo.auth_example.auth.exceptions.VerificationExpiredException;
 import com.renzo.auth_example.auth.models.RefreshToken;
-import com.renzo.auth_example.auth.models.Verification;
-import com.renzo.auth_example.mail.MailService;
-import com.renzo.auth_example.mail.exceptions.MailSendingException;
 import com.renzo.auth_example.user.exceptions.UserNotFoundException;
 import com.renzo.auth_example.user.models.User;
 import com.renzo.auth_example.user.services.UserService;
 import io.jsonwebtoken.JwtException;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.Optional;
 
 @Service

@@ -1,7 +1,6 @@
 package com.renzo.auth_example.auth.services;
 
 import com.renzo.auth_example.auth.exceptions.InvalidVerificationCodeException;
-import com.renzo.auth_example.auth.exceptions.VerificationExpiredException;
 import com.renzo.auth_example.auth.models.Verification;
 import com.renzo.auth_example.mail.MailService;
 import com.renzo.auth_example.mail.exceptions.MailSendingException;
@@ -38,11 +37,11 @@ public class EmailVerificationService {
     }
 
     public void verifyEmail(String token, String email) {
-        Verification pendingVerification = verificationService.getPendingVerification(email, token, Verification.VerificationType.EMAIL_VERIFICATION)
+        Verification pendingVerification = verificationService.getPendingVerification(token, Verification.VerificationType.EMAIL_VERIFICATION)
                 .orElseThrow(() -> new InvalidVerificationCodeException("Invalid email verification token."));
 
         if (pendingVerification.getExpiresAt().before(new Date())) {
-            throw new VerificationExpiredException("Email verification token has expired.");
+            throw new InvalidVerificationCodeException("Invalid email verification token.");
         }
 
         User user = userService.findByEmail(email)
