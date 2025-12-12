@@ -42,18 +42,17 @@ public class PasswordResetService {
         } catch (MailSendingException ignored) {}
     }
 
-    public void resetPassword(String passwordResetCode, String email, String newPassword) {
-        Account account = accountService.findByEmailAndProviderId(email, Account.ProviderType.CREDENTIALS)
-                .orElseThrow(() -> new UserNotFoundException("email", email));
-
-        Verification pendingVerification = verificationService.getPendingVerification(email, passwordResetCode, Verification.VerificationType.PASSWORD_RESET)
+    public void resetPassword(String code, String email, String password) {
+        Verification pendingVerification = verificationService.getPendingVerification(email, code, Verification.VerificationType.PASSWORD_RESET)
                 .orElseThrow(() -> new InvalidVerificationCodeException("Invalid password reset code."));
 
         if (pendingVerification.getExpiresAt().before(new Date())) {
             throw new VerificationExpiredException("Password reset code has expired.");
         }
 
-        account.setPassword(passwordEncoder.encode(newPassword));
+        Account account = accountService.findByEmailAndProviderId(email, Account.ProviderType.CREDENTIALS)
+                .orElseThrow(() -> new UserNotFoundException("email", email));
+        account.setPassword(passwordEncoder.encode(password));
         accountService.updateAccount(account);
         verificationService.delete(pendingVerification);
     }

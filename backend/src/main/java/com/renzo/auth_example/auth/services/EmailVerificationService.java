@@ -38,9 +38,6 @@ public class EmailVerificationService {
     }
 
     public void verifyEmail(String email, String code) {
-        User user = userService.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("email", email));
-
         Verification pendingVerification = verificationService.getPendingVerification(email, code, Verification.VerificationType.EMAIL_VERIFICATION)
                 .orElseThrow(() -> new InvalidVerificationCodeException("Invalid verification code."));
 
@@ -48,6 +45,8 @@ public class EmailVerificationService {
             throw new VerificationExpiredException("Verification code has expired.");
         }
 
+        User user = userService.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("email", email));
         user.setEmailVerified(true);
         userService.updateUser(user);
         verificationService.delete(pendingVerification);
