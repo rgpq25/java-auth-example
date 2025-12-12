@@ -126,7 +126,8 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 				const isAuthCall =
 					originalRequest?.url?.includes("/auth/register") ||
 					originalRequest?.url?.includes("/auth/login-credentials") ||
-					originalRequest?.url?.includes("/auth/refresh");
+					originalRequest?.url?.includes("/auth/refresh") ||
+					originalRequest?.url?.includes("/auth/password");
 
 				if (
 					error.response.status !== 401 ||
@@ -205,7 +206,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
 	const verifyEmail = useCallback(async (code: string) => {
 		try {
-			await api.post("/auth/verify-email", { code });
+			await api.post("/auth/email/verify", { code });
 
 			setUser((prev) => (prev ? { ...prev, emailVerified: true } : prev));
 
@@ -232,9 +233,9 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 
 	const resendVerificationEmail = useCallback(async () => {
 		try {
-			await api.post("/auth/resend-verification-email");
+			await api.post("/auth/email/resend");
 
-			return "Successfully sent verification email";
+			return "Successfully sent verification email!";
 		} catch {
 			throw new Error("Something went wrong!");
 		}

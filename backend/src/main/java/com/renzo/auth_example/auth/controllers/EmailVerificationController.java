@@ -17,7 +17,7 @@ public class EmailVerificationController {
         this.emailVerificationService = emailVerificationService;
     }
 
-    @GetMapping("/resend")
+    @PostMapping("/resend")
     public ResponseEntity<Void> resendVerificationEmail(Authentication authentication) {
         UserDetails principal = (UserDetails) authentication.getPrincipal();
         emailVerificationService.sendVerificationEmail(principal.getUsername());
