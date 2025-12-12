@@ -1,5 +1,11 @@
 import { api } from "@/api/api-client";
-import type { LoginForm, RegisterForm, User } from "@/lib/types";
+import type {
+	dtoPasswordRequestReset,
+	dtoPasswordReset,
+	LoginForm,
+	RegisterForm,
+	User,
+} from "@/lib/types";
 import {
 	useMutation,
 	useQuery,
@@ -40,8 +46,14 @@ type AuthContextValue = {
 	isLoading: boolean;
 	register: UseMutationResult<string, Error, RegisterForm>;
 	login: UseMutationResult<string, Error, LoginForm>;
-	verifyEmail: UseMutationResult<string, Error, string>;
 	resendVerificationEmail: UseMutationResult<string, Error, void>;
+	verifyEmail: UseMutationResult<string, Error, string>;
+	passwordRequestReset: UseMutationResult<
+		string,
+		Error,
+		dtoPasswordRequestReset
+	>;
+	passwordReset: UseMutationResult<string, Error, dtoPasswordReset>;
 	logout: UseMutationResult<string, Error, void>;
 };
 
@@ -189,6 +201,19 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 		},
 	});
 
+	const resendVerificationEmail = useMutation({
+		retry: false,
+		mutationFn: async () => {
+			try {
+				await api.post("/auth/email/resend");
+
+				return "Successfully sent verification email!";
+			} catch {
+				throw new Error("Something went wrong!");
+			}
+		},
+	});
+
 	const verifyEmail = useMutation({
 		retry: false,
 		mutationFn: async (code: string) => {
@@ -207,10 +232,6 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 						throw new Error("Invalid verification code");
 					}
 
-					if (errStatus === 404) {
-						throw new Error("Verification is no longer valid");
-					}
-
 					if (errStatus === 410) {
 						throw new Error("Verification code has expired");
 					}
@@ -221,14 +242,38 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 		},
 	});
 
-	const resendVerificationEmail = useMutation({
+	const passwordRequestReset = useMutation({
 		retry: false,
-		mutationFn: async () => {
+		mutationFn: async (request: dtoPasswordRequestReset) => {
 			try {
-				await api.post("/auth/email/resend");
+				await api.post("/auth/password/request-reset", request);
 
-				return "Successfully sent verification email!";
+				return "Successfully sent password reset email!";
 			} catch {
+				throw new Error("Something went wrong!");
+			}
+		},
+	});
+
+	const passwordReset = useMutation({
+		retry: false,
+		mutationFn: async (request: dtoPasswordReset) => {
+			try {
+				await api.post("/auth/password/reset", request);
+
+				return "Successfully changed your password!";
+			} catch (error: unknown) {
+				if (error instanceof AxiosError) {
+					const errStatus = error.status;
+					if (errStatus === 400) {
+						throw new Error("Invalid password reset code");
+					}
+
+					if (errStatus === 410) {
+						throw new Error("Password reset code has expired");
+					}
+				}
+
 				throw new Error("Something went wrong!");
 			}
 		},
@@ -260,8 +305,10 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 			isLoading,
 			register,
 			login,
-			verifyEmail,
 			resendVerificationEmail,
+			verifyEmail,
+			passwordRequestReset,
+			passwordReset,
 			logout,
 		}),
 		[
@@ -271,8 +318,10 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 			isLoading,
 			register,
 			login,
-			verifyEmail,
 			resendVerificationEmail,
+			verifyEmail,
+			passwordRequestReset,
+			passwordReset,
 			logout,
 		]
 	);

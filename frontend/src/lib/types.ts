@@ -16,3 +16,13 @@ export type User = {
 	name: string;
 	profilePicture: string | null;
 };
+
+export type dtoPasswordRequestReset = {
+	email: string;
+};
+
+export type dtoPasswordReset = {
+	code: string;
+	email: string;
+	password: string;
+};
