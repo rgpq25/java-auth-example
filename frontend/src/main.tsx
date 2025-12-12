@@ -6,7 +6,14 @@ import App from "./App.tsx";
 import AuthProvider from "./components/auth-provider.tsx";
 import ProtectedRoute from "./components/protected-route.tsx";
 import "./index.css";
-import { Login, Profile, Register, VerifyEmail } from "./pages";
+import {
+	Login,
+	PasswordRequestReset,
+	PasswordReset,
+	Profile,
+	Register,
+	VerifyEmail,
+} from "./pages";
 
 const router = createBrowserRouter([
 	{
@@ -20,6 +27,11 @@ const router = createBrowserRouter([
 			{ path: "register", element: <Register /> },
 			{ path: "login", element: <Login /> },
 			{ path: "verify-email", element: <VerifyEmail /> },
+			{
+				path: "password/request-reset",
+				element: <PasswordRequestReset />,
+			},
+			{ path: "password/reset", element: <PasswordReset /> },
 			{
 				path: "profile",
 				element: (

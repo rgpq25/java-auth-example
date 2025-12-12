@@ -1,5 +1,3 @@
-import GoogleIcon from "@/assets/google-icon.svg";
-import AuthLoading from "@/components/auth-loading";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,38 +12,28 @@ import {
 	FieldDescription,
 	FieldGroup,
 	FieldLabel,
-	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import type { LoginForm } from "@/lib/types";
+import type { dtoPasswordRequestReset } from "@/lib/types";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-export function Login() {
-	const { isAuthenticated, isLoading, login } = useAuth();
+export function PasswordRequestReset() {
+	const { passwordRequestReset } = useAuth();
 
-	const [form, setForm] = useState<LoginForm>({
+	const [form, setForm] = useState<dtoPasswordRequestReset>({
 		email: "",
-		password: "",
 	});
 
 	const handleChange =
-		(field: keyof LoginForm) =>
+		(field: keyof dtoPasswordRequestReset) =>
 		(event: React.ChangeEvent<HTMLInputElement>) => {
 			setForm((prev) => ({
 				...prev,
 				[field]: event.target.value,
 			}));
 		};
-
-	const handleLogin = () => {
-		login.mutate(form);
-	};
-
-	if (isLoading) return <AuthLoading />;
-
-	if (isAuthenticated === true) return <Navigate to="/profile" replace />;
 
 	return (
 		<div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
@@ -63,87 +51,53 @@ export function Login() {
 					<Card className="gap-4">
 						<CardHeader className="text-center">
 							<CardTitle className="text-xl">
-								Welcome back
+								Reset password
 							</CardTitle>
 							<CardDescription>
-								Login with your Google account
+								No worries, we&apos;ll send you reset
+								instructions.
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<FieldGroup className="gap-6">
 								<Field>
-									<Button
-										variant="outline"
-										type="button"
-										className="items-center flex"
-									>
-										<img
-											src={GoogleIcon}
-											alt="Google Icon"
-											className="size-4"
-										/>
-										Login with Google
-									</Button>
-								</Field>
-								<FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-									Or continue with
-								</FieldSeparator>
-								<Field>
 									<FieldLabel htmlFor="email">
-										Email
+										Email address
 									</FieldLabel>
 									<Input
 										id="email"
 										type="email"
-										placeholder="m@example.com"
+										placeholder="email@example.com"
 										required
 										value={form.email}
 										onChange={handleChange("email")}
 									/>
 								</Field>
-								<Field>
-									<div className="flex items-center">
-										<FieldLabel htmlFor="password">
-											Password
-										</FieldLabel>
-										<Link
-											to={"/password/request-reset"}
-											className="ml-auto text-sm underline-offset-4 hover:underline"
-										>
-											Forgot your password?
-										</Link>
-									</div>
-									<Input
-										id="password"
-										type="password"
-										placeholder="safePassword"
-										required
-										value={form.password}
-										onChange={handleChange("password")}
-									/>
-								</Field>
-								{login.error && (
+								{passwordRequestReset.error && (
 									<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
 										<AlertCircle className="size-5 stroke-red-500 stroke-2" />
 										<p className="text-sm text-red-500">
-											{login.error.message}
+											{passwordRequestReset.error.message}
 										</p>
 									</div>
 								)}
 								<Field className="flex flex-col gap-3">
 									<Button
 										type="button"
-										onClick={handleLogin}
-										disabled={login.isPending}
+										onClick={() =>
+											passwordRequestReset.mutate(form)
+										}
+										disabled={
+											passwordRequestReset.isPending
+										}
 									>
-										{login.isPending ? (
+										{passwordRequestReset.isPending ? (
 											<Loader2 className="size-4 animate-spin" />
 										) : null}
-										Login
+										Send
 									</Button>
 									<FieldDescription className="text-center">
-										Don&apos;t have an account?{" "}
-										<Link to={"/register"}>Sign up</Link>
+										<Link to={"/login"}>Back to login</Link>
 									</FieldDescription>
 								</Field>
 							</FieldGroup>

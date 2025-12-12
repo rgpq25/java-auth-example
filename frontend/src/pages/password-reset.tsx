@@ -1,5 +1,3 @@
-import GoogleIcon from "@/assets/google-icon.svg";
-import AuthLoading from "@/components/auth-loading";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,38 +12,38 @@ import {
 	FieldDescription,
 	FieldGroup,
 	FieldLabel,
-	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import type { LoginForm } from "@/lib/types";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
-export function Login() {
-	const { isAuthenticated, isLoading, login } = useAuth();
+type PasswordResetForm = {
+	email: string;
+	password: string;
+	confirmPassword: string;
+};
 
-	const [form, setForm] = useState<LoginForm>({
+export function PasswordReset() {
+	const [searchParams] = useSearchParams();
+	const token = searchParams.get("token");
+
+	const { passwordReset } = useAuth();
+
+	const [form, setForm] = useState<PasswordResetForm>({
 		email: "",
 		password: "",
+		confirmPassword: "",
 	});
 
 	const handleChange =
-		(field: keyof LoginForm) =>
+		(field: keyof PasswordResetForm) =>
 		(event: React.ChangeEvent<HTMLInputElement>) => {
 			setForm((prev) => ({
 				...prev,
 				[field]: event.target.value,
 			}));
 		};
-
-	const handleLogin = () => {
-		login.mutate(form);
-	};
-
-	if (isLoading) return <AuthLoading />;
-
-	if (isAuthenticated === true) return <Navigate to="/profile" replace />;
 
 	return (
 		<div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
@@ -63,31 +61,14 @@ export function Login() {
 					<Card className="gap-4">
 						<CardHeader className="text-center">
 							<CardTitle className="text-xl">
-								Welcome back
+								Create new password
 							</CardTitle>
 							<CardDescription>
-								Login with your Google account
+								Make sure your password is secure.
 							</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<FieldGroup className="gap-6">
-								<Field>
-									<Button
-										variant="outline"
-										type="button"
-										className="items-center flex"
-									>
-										<img
-											src={GoogleIcon}
-											alt="Google Icon"
-											className="size-4"
-										/>
-										Login with Google
-									</Button>
-								</Field>
-								<FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
-									Or continue with
-								</FieldSeparator>
 								<Field>
 									<FieldLabel htmlFor="email">
 										Email
@@ -95,24 +76,16 @@ export function Login() {
 									<Input
 										id="email"
 										type="email"
-										placeholder="m@example.com"
+										placeholder="email@example.com"
 										required
 										value={form.email}
 										onChange={handleChange("email")}
 									/>
 								</Field>
 								<Field>
-									<div className="flex items-center">
-										<FieldLabel htmlFor="password">
-											Password
-										</FieldLabel>
-										<Link
-											to={"/password/request-reset"}
-											className="ml-auto text-sm underline-offset-4 hover:underline"
-										>
-											Forgot your password?
-										</Link>
-									</div>
+									<FieldLabel htmlFor="email">
+										Password
+									</FieldLabel>
 									<Input
 										id="password"
 										type="password"
@@ -122,28 +95,48 @@ export function Login() {
 										onChange={handleChange("password")}
 									/>
 								</Field>
-								{login.error && (
+								<Field>
+									<FieldLabel htmlFor="email">
+										Confirm password
+									</FieldLabel>
+									<Input
+										id="confirmPassword"
+										type="password"
+										placeholder="safePassword"
+										required
+										value={form.confirmPassword}
+										onChange={handleChange(
+											"confirmPassword"
+										)}
+									/>
+								</Field>
+								{passwordReset.error && (
 									<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
 										<AlertCircle className="size-5 stroke-red-500 stroke-2" />
 										<p className="text-sm text-red-500">
-											{login.error.message}
+											{passwordReset.error.message}
 										</p>
 									</div>
 								)}
 								<Field className="flex flex-col gap-3">
 									<Button
 										type="button"
-										onClick={handleLogin}
-										disabled={login.isPending}
+										onClick={() =>
+											passwordReset.mutate({
+												code: token || "",
+												email: form.email,
+												password: form.confirmPassword,
+											})
+										}
+										disabled={passwordReset.isPending}
 									>
-										{login.isPending ? (
+										{passwordReset.isPending ? (
 											<Loader2 className="size-4 animate-spin" />
 										) : null}
-										Login
+										Send
 									</Button>
 									<FieldDescription className="text-center">
-										Don&apos;t have an account?{" "}
-										<Link to={"/register"}>Sign up</Link>
+										<Link to={"/login"}>Back to login</Link>
 									</FieldDescription>
 								</Field>
 							</FieldGroup>
