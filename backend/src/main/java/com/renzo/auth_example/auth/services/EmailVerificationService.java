@@ -30,19 +30,19 @@ public class EmailVerificationService {
 
     public void sendVerificationEmail(String email) {
         verificationService.deleteAllEmailVerifications(email);
-        String verificationCode = verificationService.createEmailVerification(email);
+        String token = verificationService.createEmailVerification(email);
 
         try {
-            mailService.sendEmailVerificationCode(email, verificationCode);
+            mailService.sendEmailVerificationToken(email, token);
         } catch (MailSendingException ignored) {}
     }
 
-    public void verifyEmail(String email, String code) {
-        Verification pendingVerification = verificationService.getPendingVerification(email, code, Verification.VerificationType.EMAIL_VERIFICATION)
-                .orElseThrow(() -> new InvalidVerificationCodeException("Invalid verification code."));
+    public void verifyEmail(String token, String email) {
+        Verification pendingVerification = verificationService.getPendingVerification(email, token, Verification.VerificationType.EMAIL_VERIFICATION)
+                .orElseThrow(() -> new InvalidVerificationCodeException("Invalid email verification token."));
 
         if (pendingVerification.getExpiresAt().before(new Date())) {
-            throw new VerificationExpiredException("Verification code has expired.");
+            throw new VerificationExpiredException("Email verification token has expired.");
         }
 
         User user = userService.findByEmail(email)

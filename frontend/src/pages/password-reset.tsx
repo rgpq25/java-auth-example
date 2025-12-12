@@ -123,7 +123,7 @@ export function PasswordReset() {
 										type="button"
 										onClick={() =>
 											passwordReset.mutate({
-												code: token || "",
+												token: token || "",
 												email: form.email,
 												password: form.confirmPassword,
 											})

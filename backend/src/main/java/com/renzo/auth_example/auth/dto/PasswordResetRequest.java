@@ -5,9 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record PasswordResetRequest(
-        @NotNull(message = "Code is required.")
-        @NotBlank(message = "Code can't be blank.")
-        String code,
+        @NotNull(message = "Token is required.")
+        @NotBlank(message = "Token can't be blank.")
+        String token,
 
         @NotNull(message = "Email is required.")
         @NotBlank(message = "Email can't be blank.")

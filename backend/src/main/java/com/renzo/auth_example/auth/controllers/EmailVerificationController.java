@@ -31,7 +31,7 @@ public class EmailVerificationController {
             Authentication authentication
     ) {
         UserDetails principal = (UserDetails) authentication.getPrincipal();
-        emailVerificationService.verifyEmail(principal.getUsername(), request.code());
+        emailVerificationService.verifyEmail(request.token(), principal.getUsername());
 
         return ResponseEntity.noContent().build();
     }

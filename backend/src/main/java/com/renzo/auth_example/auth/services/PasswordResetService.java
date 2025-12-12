@@ -35,19 +35,19 @@ public class PasswordResetService {
 
     public void sendPasswordResetEmail(String email) {
         verificationService.deleteAllPasswordResetVerifications(email);
-        String passwordResetCode = verificationService.createPasswordResetVerification(email);
+        String token = verificationService.createPasswordResetVerification(email);
 
         try {
-            mailService.sendPasswordResetUrl(email, passwordResetCode);
+            mailService.sendPasswordResetUrl(email, token);
         } catch (MailSendingException ignored) {}
     }
 
-    public void resetPassword(String code, String email, String password) {
-        Verification pendingVerification = verificationService.getPendingVerification(email, code, Verification.VerificationType.PASSWORD_RESET)
-                .orElseThrow(() -> new InvalidVerificationCodeException("Invalid password reset code."));
+    public void resetPassword(String token, String email, String password) {
+        Verification pendingVerification = verificationService.getPendingVerification(email, token, Verification.VerificationType.PASSWORD_RESET)
+                .orElseThrow(() -> new InvalidVerificationCodeException("Invalid password reset token."));
 
         if (pendingVerification.getExpiresAt().before(new Date())) {
-            throw new VerificationExpiredException("Password reset code has expired.");
+            throw new VerificationExpiredException("Password reset token has expired.");
         }
 
         Account account = accountService.findByEmailAndProviderId(email, Account.ProviderType.CREDENTIALS)

@@ -16,7 +16,7 @@ public class MailService {
         this.mailSender = mailSender;
     }
 
-    public void sendEmailVerificationCode(String emailToSend, String verificationCode) {
+    public void sendEmailVerificationToken(String emailToSend, String token) {
         String subject = "Account Verification";
         String htmlMessage = "<html>"
                 + "<body style=\"font-family: Arial, sans-serif;\">"
@@ -25,7 +25,7 @@ public class MailService {
                 + "<p style=\"font-size: 16px;\">Please enter the verification code below to continue:</p>"
                 + "<div style=\"background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);\">"
                 + "<h3 style=\"color: #333;\">Verification Code:</h3>"
-                + "<p style=\"font-size: 18px; font-weight: bold; color: #007bff;\">VERIFICATION CODE: " + verificationCode + "</p>"
+                + "<p style=\"font-size: 18px; font-weight: bold; color: #007bff;\">VERIFICATION CODE: " + token + "</p>"
                 + "</div>"
                 + "</div>"
                 + "</body>"
@@ -44,9 +44,9 @@ public class MailService {
         }
     }
 
-    public void sendPasswordResetUrl(String emailToSend, String resetCode) {
+    public void sendPasswordResetUrl(String emailToSend, String token) {
         String subject = "Password Reset";
-        String url = "http://localhost:5173/reset-password/?token=" + resetCode;
+        String url = "http://localhost:5173/password/reset?token=" + token;
         String htmlMessage = "<html>"
                 + "<body style=\"font-family: Arial, sans-serif;\">"
                 + "<div style=\"background-color: #f5f5f5; padding: 20px;\">"
