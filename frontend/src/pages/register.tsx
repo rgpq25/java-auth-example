@@ -17,16 +17,12 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useMutation } from "@tanstack/react-query";
+import type { RegisterForm } from "@/lib/types";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 
-type RegisterForm = {
-	name: string;
-	email: string;
-	password: string;
-};
+
 
 export function Register() {
 	const { isAuthenticated, isLoading, register } = useAuth();
@@ -35,10 +31,6 @@ export function Register() {
 		name: "",
 		email: "",
 		password: "",
-	});
-
-	const registerMutation = useMutation({
-		mutationFn: register,
 	});
 
 	const handleChange =
@@ -51,7 +43,7 @@ export function Register() {
 		};
 
 	const handleRegister = () => {
-		registerMutation.mutate(form);
+		register.mutate(form);
 	};
 
 	if (isLoading) return <AuthLoading />;
@@ -87,7 +79,7 @@ export function Register() {
 										variant="outline"
 										type="button"
 										className="items-center flex"
-										disabled={registerMutation.isPending}
+										disabled={register.isPending}
 									>
 										<img
 											src={GoogleIcon}
@@ -139,11 +131,11 @@ export function Register() {
 										onChange={handleChange("password")}
 									/>
 								</Field>
-								{registerMutation.error && (
+								{register.error && (
 									<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
 										<AlertCircle className="size-5 stroke-red-500 stroke-2" />
 										<p className="text-sm text-red-500">
-											{registerMutation.error.message}
+											{register.error.message}
 										</p>
 									</div>
 								)}
@@ -151,9 +143,9 @@ export function Register() {
 									<Button
 										type="button"
 										onClick={handleRegister}
-										disabled={registerMutation.isPending}
+										disabled={register.isPending}
 									>
-										{registerMutation.isPending ? (
+										{register.isPending ? (
 											<Loader2 className="size-4 animate-spin" />
 										) : null}
 										Register

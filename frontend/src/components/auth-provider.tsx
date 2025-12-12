@@ -1,5 +1,10 @@
 import { api } from "@/api/api-client";
-import { useQuery } from "@tanstack/react-query";
+import type { LoginForm, RegisterForm, User } from "@/lib/types";
+import {
+	useMutation,
+	useQuery,
+	type UseMutationResult,
+} from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { jwtDecode } from "jwt-decode";
 import {
@@ -12,25 +17,6 @@ import {
 	type PropsWithChildren,
 } from "react";
 import { useNavigate } from "react-router-dom";
-
-type User = {
-	id: number;
-	email: string;
-	emailVerified: boolean;
-	name: string;
-	profilePicture: string | null;
-};
-
-type LoginCredentials = {
-	email: string;
-	password: string;
-};
-
-type RegisterData = {
-	name: string;
-	email: string;
-	password: string;
-};
 
 type JwtPayload = {
 	jti: string;
@@ -52,12 +38,11 @@ type AuthContextValue = {
 	accessToken: string | null;
 	isAuthenticated: boolean;
 	isLoading: boolean;
-
-	register: (data: RegisterData) => Promise<string>;
-	login: (credentials: LoginCredentials) => Promise<string>;
-	verifyEmail: (code: string) => Promise<string>;
-	resendVerificationEmail: () => Promise<string>;
-	logout: () => Promise<string>;
+	register: UseMutationResult<string, Error, RegisterForm>;
+	login: UseMutationResult<string, Error, LoginForm>;
+	verifyEmail: UseMutationResult<string, Error, string>;
+	resendVerificationEmail: UseMutationResult<string, Error, void>;
+	logout: UseMutationResult<string, Error, void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -154,8 +139,9 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 		return () => api.interceptors.response.eject(refreshInterceptor);
 	}, [saveAccessToken]);
 
-	const register = useCallback(
-		async (data: RegisterData) => {
+	const register = useMutation({
+		retry: false,
+		mutationFn: async (data: RegisterForm) => {
 			try {
 				const response = await api.post<AuthResponse>(
 					"/auth/register",
@@ -176,11 +162,11 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 				throw new Error("Something went wrong!");
 			}
 		},
-		[saveAccessToken]
-	);
+	});
 
-	const login = useCallback(
-		async (credentials: LoginCredentials) => {
+	const login = useMutation({
+		retry: false,
+		mutationFn: async (credentials: LoginForm) => {
 			try {
 				const response = await api.post<AuthResponse>(
 					"/auth/login-credentials",
@@ -201,58 +187,68 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 				throw new Error("Something went wrong!");
 			}
 		},
-		[saveAccessToken]
-	);
+	});
 
-	const verifyEmail = useCallback(async (code: string) => {
-		try {
-			await api.post("/auth/email/verify", { code });
+	const verifyEmail = useMutation({
+		retry: false,
+		mutationFn: async (code: string) => {
+			try {
+				await api.post("/auth/email/verify", { code });
 
-			setUser((prev) => (prev ? { ...prev, emailVerified: true } : prev));
+				setUser((prev) =>
+					prev ? { ...prev, emailVerified: true } : prev
+				);
 
-			return "Successfully verified your account!";
-		} catch (error: unknown) {
-			if (error instanceof AxiosError) {
-				const errStatus = error.status;
-				if (errStatus === 400) {
-					throw new Error("Invalid verification code");
+				return "Successfully verified your account!";
+			} catch (error: unknown) {
+				if (error instanceof AxiosError) {
+					const errStatus = error.status;
+					if (errStatus === 400) {
+						throw new Error("Invalid verification code");
+					}
+
+					if (errStatus === 404) {
+						throw new Error("Verification is no longer valid");
+					}
+
+					if (errStatus === 410) {
+						throw new Error("Verification code has expired");
+					}
 				}
 
-				if (errStatus === 404) {
-					throw new Error("Verification is no longer valid");
-				}
-
-				if (errStatus === 410) {
-					throw new Error("Verification code has expired");
-				}
+				throw new Error("Something went wrong!");
 			}
+		},
+	});
 
-			throw new Error("Something went wrong!");
-		}
-	}, []);
+	const resendVerificationEmail = useMutation({
+		retry: false,
+		mutationFn: async () => {
+			try {
+				await api.post("/auth/email/resend");
 
-	const resendVerificationEmail = useCallback(async () => {
-		try {
-			await api.post("/auth/email/resend");
+				return "Successfully sent verification email!";
+			} catch {
+				throw new Error("Something went wrong!");
+			}
+		},
+	});
 
-			return "Successfully sent verification email!";
-		} catch {
-			throw new Error("Something went wrong!");
-		}
-	}, []);
+	const logout = useMutation({
+		retry: false,
+		mutationFn: async () => {
+			try {
+				await api.post("/auth/logout");
 
-	const logout = useCallback(async () => {
-		try {
-			await api.post("/auth/logout");
+				saveAccessToken(null);
+				navigate("/login", { replace: true });
 
-			saveAccessToken(null);
-			navigate("/login", { replace: true });
-
-			return "Successfully logged out!";
-		} catch {
-			throw new Error("Something went wrong!");
-		}
-	}, [saveAccessToken, navigate]);
+				return "Successfully logged out!";
+			} catch {
+				throw new Error("Something went wrong!");
+			}
+		},
+	});
 
 	const isAuthenticated = !!user;
 

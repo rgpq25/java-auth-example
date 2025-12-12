@@ -20,7 +20,7 @@ export function Profile() {
 				<p className="text-center">This is the profile page</p>
 				<div>{JSON.stringify(user)}</div>
 				<Button onClick={onRefetch}>Refetch</Button>
-				<Button onClick={logout}>Log out</Button>
+				<Button onClick={() => logout.mutate()}>Log out</Button>
 			</div>
 		</div>
 	);

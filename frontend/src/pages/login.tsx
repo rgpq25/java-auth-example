@@ -1,4 +1,3 @@
-import { useState } from "react";
 import GoogleIcon from "@/assets/google-icon.svg";
 import AuthLoading from "@/components/auth-loading";
 import { useAuth } from "@/components/auth-provider";
@@ -18,14 +17,12 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useMutation } from "@tanstack/react-query";
+import type { LoginForm } from "@/lib/types";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 
-type LoginForm = {
-	email: string;
-	password: string;
-};
+
 
 export function Login() {
 	const { isAuthenticated, isLoading, login } = useAuth();
@@ -33,10 +30,6 @@ export function Login() {
 	const [form, setForm] = useState<LoginForm>({
 		email: "",
 		password: "",
-	});
-
-	const loginMutation = useMutation({
-		mutationFn: login,
 	});
 
 	const handleChange =
@@ -49,7 +42,7 @@ export function Login() {
 		};
 
 	const handleLogin = () => {
-		loginMutation.mutate(form);
+		login.mutate(form);
 	};
 
 	if (isLoading) return <AuthLoading />;
@@ -131,11 +124,11 @@ export function Login() {
 										onChange={handleChange("password")}
 									/>
 								</Field>
-								{loginMutation.error && (
+								{login.error && (
 									<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
 										<AlertCircle className="size-5 stroke-red-500 stroke-2" />
 										<p className="text-sm text-red-500">
-											{loginMutation.error.message}
+											{login.error.message}
 										</p>
 									</div>
 								)}
@@ -143,9 +136,9 @@ export function Login() {
 									<Button
 										type="button"
 										onClick={handleLogin}
-										disabled={loginMutation.isPending}
+										disabled={login.isPending}
 									>
-										{loginMutation.isPending ? (
+										{login.isPending ? (
 											<Loader2 className="size-4 animate-spin" />
 										) : null}
 										Login

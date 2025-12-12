@@ -18,7 +18,6 @@ import {
 	InputOTPGroup,
 	InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
@@ -33,14 +32,6 @@ export function VerifyEmail() {
 	} = useAuth();
 
 	const [otp, setOtp] = useState("");
-
-	const verifyEmailMutation = useMutation({
-		mutationFn: (code: string) => verifyEmail(code),
-	});
-
-	const resendVerifEmail = useMutation({
-		mutationFn: resendVerificationEmail,
-	});
 
 	if (isLoading) return null;
 
@@ -57,11 +48,11 @@ export function VerifyEmail() {
 			return;
 		}
 
-		verifyEmailMutation.mutate(otp);
+		verifyEmail.mutate(otp);
 	};
 
 	const handleResend = () => {
-		resendVerifEmail.mutate();
+		resendVerificationEmail.mutate();
 	};
 
 	return (
@@ -111,11 +102,11 @@ export function VerifyEmail() {
 									Enter the 6-digit code sent to your email.
 								</FieldDescription>
 							</Field>
-							{verifyEmailMutation.isError && (
+							{verifyEmail.isError && (
 								<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
 									<AlertCircle className="size-5 stroke-red-500 stroke-2" />
 									<p className="text-sm text-red-500">
-										{verifyEmailMutation.error.message}
+										{verifyEmail.error.message}
 									</p>
 								</div>
 							)}
@@ -123,20 +114,22 @@ export function VerifyEmail() {
 								<Button
 									onClick={handleVerify}
 									disabled={
-										verifyEmailMutation.isPending ||
-										otp.length < 6
+										verifyEmail.isPending || otp.length < 6
 									}
 								>
-									{verifyEmailMutation.isPending ? (
+									{verifyEmail.isPending ? (
 										<Loader2 className="size-4 animate-spin" />
 									) : null}
 									Verify
 								</Button>
 								<FieldDescription className="text-center">
-									{resendVerifEmail.isError ? (
+									{resendVerificationEmail.isError ? (
 										<>
 											<span>
-												{resendVerifEmail.error.message}
+												{
+													resendVerificationEmail
+														.error.message
+												}
 											</span>
 											<button
 												className="hover:text-black underline cursor-pointer"
@@ -145,7 +138,7 @@ export function VerifyEmail() {
 												Try again
 											</button>
 										</>
-									) : resendVerifEmail.isPending ? (
+									) : resendVerificationEmail.isPending ? (
 										<span>Sending email...</span>
 									) : (
 										<>
