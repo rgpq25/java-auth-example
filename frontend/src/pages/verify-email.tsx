@@ -1,4 +1,5 @@
 import { useAuth } from "@/components/auth-provider";
+import AuthWrapper from "@/components/auth-wrapper";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -56,7 +57,7 @@ export function VerifyEmail() {
 	};
 
 	return (
-		<div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+		<AuthWrapper>
 			<div className="flex w-full max-w-xs flex-col gap-6">
 				<a
 					href="#"
@@ -159,6 +160,6 @@ export function VerifyEmail() {
 					</CardContent>
 				</Card>
 			</div>
-		</div>
+		</AuthWrapper>
 	);
 }

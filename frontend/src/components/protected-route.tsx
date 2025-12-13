@@ -15,7 +15,7 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
 	}
 
 	if (user?.emailVerified === false) {
-		return <Navigate to="/verify-email" replace />;
+		return <Navigate to="/email/verify" replace />;
 	}
 
 	return children;

@@ -1,6 +1,7 @@
 import GoogleIcon from "@/assets/google-icon.svg";
 import AuthLoading from "@/components/auth-loading";
 import { useAuth } from "@/components/auth-provider";
+import AuthWrapper from "@/components/auth-wrapper";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -21,8 +22,6 @@ import type { RegisterForm } from "@/lib/types";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-
-
 
 export function Register() {
 	const { isAuthenticated, isLoading, register } = useAuth();
@@ -51,7 +50,7 @@ export function Register() {
 	if (isAuthenticated === true) return <Navigate to="/profile" replace />;
 
 	return (
-		<div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+		<AuthWrapper>
 			<div className="flex w-full max-w-sm flex-col gap-6">
 				<a
 					href="#"
@@ -160,6 +159,6 @@ export function Register() {
 					</Card>
 				</div>
 			</div>
-		</div>
+		</AuthWrapper>
 	);
 }
