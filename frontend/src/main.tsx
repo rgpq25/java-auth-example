@@ -28,10 +28,15 @@ const router = createBrowserRouter([
 			{ path: "login", element: <Login /> },
 			{ path: "email/verify", element: <VerifyEmail /> },
 			{
-				path: "password/request-reset",
-				element: <PasswordRequestReset />,
+				path: "password",
+				children: [
+					{
+						path: "request-reset",
+						element: <PasswordRequestReset />,
+					},
+					{ path: "reset", element: <PasswordReset /> },
+				],
 			},
-			{ path: "password/reset", element: <PasswordReset /> },
 			{
 				path: "profile",
 				element: (
