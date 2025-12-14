@@ -59,6 +59,9 @@ public class AuthService {
 
         User user = userService.findByEmail(request.email())
                 .orElseThrow(() -> new UserNotFoundException("email", request.email()));
+        if (!user.getEmailVerified()) {
+            emailVerificationService.sendVerificationEmail(user.getEmail());
+        }
 
         JwtToken accessToken = jwtService.generateAccessToken(user);
         JwtToken refreshToken = jwtService.generateRefreshToken(user);
