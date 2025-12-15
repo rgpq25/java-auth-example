@@ -1,3 +1,7 @@
+// TODO: all the mutations used here are a global state.
+// TODO: if you request a password change, go back to login, and request it again, the mutation is still successfull.
+// TODO: the auth actions need to be moved elsewhere.
+
 import { api } from "@/api/api-client";
 import type {
 	dtoPasswordRequestReset,
@@ -255,12 +259,12 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 			try {
 				await api.post("/auth/password/reset", request);
 
-				return "Successfully changed your password!";
+				return "Successfully changed your password! Head back and login with your credentials.";
 			} catch (error: unknown) {
 				if (error instanceof AxiosError) {
 					const errStatus = error.status;
 					if (errStatus === 400) {
-						throw new Error("Invalid password reset code");
+						throw new Error("Invalid password reset link.");
 					}
 				}
 

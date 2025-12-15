@@ -23,6 +23,5 @@ export type dtoPasswordRequestReset = {
 
 export type dtoPasswordReset = {
 	token: string;
-	email: string;
 	password: string;
 };
