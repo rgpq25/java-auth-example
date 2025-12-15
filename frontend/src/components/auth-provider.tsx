@@ -3,6 +3,7 @@
 // TODO: the auth actions need to be moved elsewhere.
 
 import { api } from "@/api/api-client";
+import { AuthContext, type AuthContextValue } from "@/hooks/use-auth";
 import type {
 	dtoLogin,
 	dtoPasswordRequestReset,
@@ -15,9 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { jwtDecode } from "jwt-decode";
 import {
-	createContext,
 	useCallback,
-	useContext,
 	useLayoutEffect,
 	useMemo,
 	useState,
@@ -41,22 +40,6 @@ type JwtPayload = {
 type AuthResponse = {
 	accessToken: string;
 };
-
-type AuthContextValue = {
-	user: User | null;
-	accessToken: string | null;
-	isAuthenticated: boolean;
-	isLoading: boolean;
-	register: (data: dtoRegister) => Promise<string>;
-	login: (data: dtoLogin) => Promise<string>;
-	resendVerificationEmail: () => Promise<string>;
-	verifyEmail: (data: dtoVerifyEmail) => Promise<string>;
-	passwordRequestReset: (data: dtoPasswordRequestReset) => Promise<string>;
-	passwordReset: (data: dtoPasswordReset) => Promise<string>;
-	logout: () => Promise<string>;
-};
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 type AuthProviderProps = PropsWithChildren;
 
@@ -309,14 +292,4 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 	return (
 		<AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 	);
-}
-
-export function useAuth(): AuthContextValue {
-	const context = useContext(AuthContext);
-
-	if (context === undefined) {
-		throw new Error("useAuth must be used within an AuthProvider");
-	}
-
-	return context;
 }

@@ -1,6 +1,5 @@
 import SuccessIcon from "@/assets/success.svg";
 import AuthLoading from "@/components/auth-loading";
-import { useAuth } from "@/components/auth-provider";
 import AuthWrapper from "@/components/auth-wrapper";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +16,7 @@ import {
 	FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";

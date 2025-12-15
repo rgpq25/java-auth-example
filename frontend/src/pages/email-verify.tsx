@@ -2,7 +2,6 @@ import ErrorIcon from "@/assets/error.svg";
 import PasswordRequestSuccess from "@/assets/password-request-success.png";
 import SuccessIcon from "@/assets/success.svg";
 import AuthLoading from "@/components/auth-loading";
-import { useAuth } from "@/components/auth-provider";
 import AuthWrapper from "@/components/auth-wrapper";
 import {
 	Card,
@@ -11,6 +10,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { FieldDescription } from "@/components/ui/field";
+import { useAuth } from "@/hooks/use-auth";
 import {
 	useMutation,
 	useQuery,

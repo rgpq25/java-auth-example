@@ -1,6 +1,6 @@
 import { api } from "@/api/api-client";
-import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 
 export function Profile() {
