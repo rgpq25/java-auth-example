@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { RegisterForm } from "@/lib/types";
+import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
@@ -41,9 +42,10 @@ export function Register() {
 			}));
 		};
 
-	const handleRegister = () => {
-		register.mutate(form);
-	};
+	const registerMutation = useMutation({
+		retry: false,
+		mutationFn: register,
+	});
 
 	if (isLoading) return <AuthLoading />;
 
@@ -78,7 +80,7 @@ export function Register() {
 										variant="outline"
 										type="button"
 										className="items-center flex"
-										disabled={register.isPending}
+										disabled={registerMutation.isPending}
 									>
 										<img
 											src={GoogleIcon}
@@ -130,21 +132,23 @@ export function Register() {
 										onChange={handleChange("password")}
 									/>
 								</Field>
-								{register.error && (
+								{registerMutation.error && (
 									<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
 										<AlertCircle className="size-5 stroke-red-500 stroke-2" />
 										<p className="text-sm text-red-500">
-											{register.error.message}
+											{registerMutation.error.message}
 										</p>
 									</div>
 								)}
 								<Field className="flex flex-col gap-3">
 									<Button
 										type="button"
-										onClick={handleRegister}
-										disabled={register.isPending}
+										onClick={() =>
+											registerMutation.mutate(form)
+										}
+										disabled={registerMutation.isPending}
 									>
-										{register.isPending ? (
+										{registerMutation.isPending ? (
 											<Loader2 className="size-4 animate-spin" />
 										) : null}
 										Register

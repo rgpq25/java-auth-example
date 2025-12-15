@@ -1,9 +1,15 @@
 import { api } from "@/api/api-client";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
 
 export function Profile() {
 	const { user, logout } = useAuth();
+
+	const logoutMutation = useMutation({
+		retry: false,
+		mutationFn: logout,
+	});
 
 	async function onRefetch() {
 		try {
@@ -20,7 +26,7 @@ export function Profile() {
 				<p className="text-center">This is the profile page</p>
 				<div>{JSON.stringify(user)}</div>
 				<Button onClick={onRefetch}>Refetch</Button>
-				<Button onClick={() => logout.mutate()}>Log out</Button>
+				<Button onClick={() => logoutMutation.mutate()}>Log out</Button>
 			</div>
 		</div>
 	);

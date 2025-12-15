@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { dtoPasswordRequestReset } from "@/lib/types";
+import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
@@ -38,6 +39,11 @@ export function PasswordRequestReset() {
 			}));
 		};
 
+	const passwordRequestResetMutation = useMutation({
+		retry: false,
+		mutationFn: passwordRequestReset,
+	});
+
 	if (isLoading) return <AuthLoading />;
 
 	if (isAuthenticated) return <Navigate to="/profile" replace />;
@@ -55,7 +61,7 @@ export function PasswordRequestReset() {
 					Java Auth Example
 				</a>
 				<div className={"flex flex-col gap-4"}>
-					{passwordRequestReset.isSuccess ? (
+					{passwordRequestResetMutation.isSuccess ? (
 						<>
 							<Card className="gap-4">
 								<CardHeader className="text-center gap-2">
@@ -105,12 +111,12 @@ export function PasswordRequestReset() {
 												onChange={handleChange("email")}
 											/>
 										</Field>
-										{passwordRequestReset.error && (
+										{passwordRequestResetMutation.error && (
 											<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
 												<AlertCircle className="size-5 stroke-red-500 stroke-2" />
 												<p className="text-sm text-red-500">
 													{
-														passwordRequestReset
+														passwordRequestResetMutation
 															.error.message
 													}
 												</p>
@@ -120,15 +126,15 @@ export function PasswordRequestReset() {
 											<Button
 												type="button"
 												onClick={() =>
-													passwordRequestReset.mutate(
+													passwordRequestResetMutation.mutate(
 														form
 													)
 												}
 												disabled={
-													passwordRequestReset.isPending
+													passwordRequestResetMutation.isPending
 												}
 											>
-												{passwordRequestReset.isPending ? (
+												{passwordRequestResetMutation.isPending ? (
 													<Loader2 className="size-4 animate-spin" />
 												) : null}
 												Send

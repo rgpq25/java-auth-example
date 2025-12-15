@@ -1,6 +1,6 @@
 import ErrorIcon from "@/assets/error.svg";
-import SuccessIcon from "@/assets/success.svg";
 import PasswordRequestSuccess from "@/assets/password-request-success.png";
+import SuccessIcon from "@/assets/success.svg";
 import AuthLoading from "@/components/auth-loading";
 import { useAuth } from "@/components/auth-provider";
 import AuthWrapper from "@/components/auth-wrapper";
@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/card";
 import { FieldDescription } from "@/components/ui/field";
 import {
+	useMutation,
 	useQuery,
-	type UseMutationResult,
 	type UseQueryResult,
 } from "@tanstack/react-query";
 import { GalleryVerticalEnd, Loader2 } from "lucide-react";
@@ -23,14 +23,7 @@ export function VerifyEmail() {
 	const [searchParams] = useSearchParams();
 	const token = searchParams.get("token");
 
-	const {
-		user,
-		isLoading,
-		isAuthenticated,
-		verifyEmail,
-		resendVerificationEmail,
-		logout,
-	} = useAuth();
+	const { user, isLoading, isAuthenticated, verifyEmail, logout } = useAuth();
 
 	const verifyEmailQuery = useQuery({
 		queryKey: ["verifyEmail", token],
@@ -39,9 +32,14 @@ export function VerifyEmail() {
 		},
 		gcTime: 0,
 		enabled:
-			!!token && isAuthenticated && user !== null && user.emailVerified,
+			!!token && isAuthenticated && !user?.emailVerified,
 		retry: false,
 		refetchOnWindowFocus: false,
+	});
+
+	const logoutMutation = useMutation({
+		retry: false,
+		mutationFn: logout,
 	});
 
 	if (isLoading) return <AuthLoading />;
@@ -69,23 +67,16 @@ export function VerifyEmail() {
 				<div className="flex flex-col gap-4">
 					<Card className="gap-4">
 						{token === null ? (
-							<EmailSent
-								resendVerificationEmail={
-									resendVerificationEmail
-								}
-							/>
+							<EmailSent />
 						) : (
 							<EmailVerification
 								verifyEmailQuery={verifyEmailQuery}
-								resendVerificationEmail={
-									resendVerificationEmail
-								}
 							/>
 						)}
 					</Card>
 					<FieldDescription className="text-center">
 						<a
-							onClick={() => logout.mutate()}
+							onClick={() => logoutMutation.mutate()}
 							className="cursor-pointer"
 						>
 							Back to login
@@ -99,10 +90,8 @@ export function VerifyEmail() {
 
 function EmailVerification({
 	verifyEmailQuery,
-	resendVerificationEmail,
 }: {
 	verifyEmailQuery: UseQueryResult<string | null, Error>;
-	resendVerificationEmail: UseMutationResult<string, Error, void>;
 }) {
 	if (verifyEmailQuery.isFetching)
 		return (
@@ -143,10 +132,7 @@ function EmailVerification({
 				<CardDescription>
 					{verifyEmailQuery.error.message}
 				</CardDescription>
-				<ResendEmailField
-					text="Let's try again!"
-					resendVerificationEmail={resendVerificationEmail}
-				/>
+				<ResendEmailField text="Let's try again!" />
 			</CardHeader>
 		);
 	}
@@ -155,17 +141,14 @@ function EmailVerification({
 		<CardHeader className="text-center gap-3">
 			<CardTitle className="text-xl mt-1">What are you up to?</CardTitle>
 			<CardDescription>
-				You shouldn&apos;t really be here! Your email is already verified!
+				You shouldn&apos;t really be here! Your email is already
+				verified!
 			</CardDescription>
 		</CardHeader>
 	);
 }
 
-function EmailSent({
-	resendVerificationEmail,
-}: {
-	resendVerificationEmail: UseMutationResult<string, Error, void>;
-}) {
+function EmailSent() {
 	return (
 		<CardHeader className="text-center gap-3">
 			<img
@@ -178,33 +161,36 @@ function EmailSent({
 				We have sent instructions to your email so you can verify your
 				account. Dont forget to check your junk emails.
 			</CardDescription>
-			<ResendEmailField
-				resendVerificationEmail={resendVerificationEmail}
-			/>
+			<ResendEmailField />
 		</CardHeader>
 	);
 }
 
 function ResendEmailField({
 	text = "Didn't receive the email?",
-	resendVerificationEmail,
 }: {
 	text?: string;
-	resendVerificationEmail: UseMutationResult<string, Error, void>;
 }) {
+	const { resendVerificationEmail } = useAuth();
+
+	const resendVerificationEmailMutation = useMutation({
+		retry: false,
+		mutationFn: resendVerificationEmail,
+	});
+
 	return (
 		<FieldDescription className="text-center">
-			{resendVerificationEmail.isError ? (
+			{resendVerificationEmailMutation.isError ? (
 				<>
-					<span>{resendVerificationEmail.error.message}</span>
+					<span>{resendVerificationEmailMutation.error.message}</span>
 					<button
 						className="hover:text-black underline cursor-pointer"
-						onClick={() => resendVerificationEmail.mutate()}
+						onClick={() => resendVerificationEmailMutation.mutate()}
 					>
 						Try again
 					</button>
 				</>
-			) : resendVerificationEmail.isPending ? (
+			) : resendVerificationEmailMutation.isPending ? (
 				<span>Sending email...</span>
 			) : (
 				<>
@@ -212,7 +198,9 @@ function ResendEmailField({
 						{text}{" "}
 						<button
 							className="hover:text-black underline cursor-pointer"
-							onClick={() => resendVerificationEmail.mutate()}
+							onClick={() =>
+								resendVerificationEmailMutation.mutate()
+							}
 						>
 							Resend
 						</button>

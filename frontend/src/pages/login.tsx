@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { LoginForm } from "@/lib/types";
+import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
@@ -40,9 +41,10 @@ export function Login() {
 			}));
 		};
 
-	const handleLogin = () => {
-		login.mutate(form);
-	};
+	const loginMutation = useMutation({
+		retry: false,
+		mutationFn: login,
+	});
 
 	if (isLoading) return <AuthLoading />;
 
@@ -96,7 +98,7 @@ export function Login() {
 									<Input
 										id="email"
 										type="email"
-										placeholder="m@example.com"
+										placeholder="email@example.com"
 										required
 										value={form.email}
 										onChange={handleChange("email")}
@@ -123,21 +125,23 @@ export function Login() {
 										onChange={handleChange("password")}
 									/>
 								</Field>
-								{login.error && (
+								{loginMutation.error && (
 									<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
 										<AlertCircle className="size-5 stroke-red-500 stroke-2" />
 										<p className="text-sm text-red-500">
-											{login.error.message}
+											{loginMutation.error.message}
 										</p>
 									</div>
 								)}
 								<Field className="flex flex-col gap-3">
 									<Button
 										type="button"
-										onClick={handleLogin}
-										disabled={login.isPending}
+										onClick={() =>
+											loginMutation.mutate(form)
+										}
+										disabled={loginMutation.isPending}
 									>
-										{login.isPending ? (
+										{loginMutation.isPending ? (
 											<Loader2 className="size-4 animate-spin" />
 										) : null}
 										Login

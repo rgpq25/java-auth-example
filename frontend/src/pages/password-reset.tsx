@@ -17,6 +17,7 @@ import {
 	FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
@@ -46,6 +47,11 @@ export function PasswordReset() {
 			}));
 		};
 
+	const passwordResetMutation = useMutation({
+		retry: false,
+		mutationFn: passwordReset,
+	});
+
 	if (isLoading) return <AuthLoading />;
 
 	if (isAuthenticated) return <Navigate to="/profile" replace />;
@@ -63,7 +69,7 @@ export function PasswordReset() {
 					Java Auth Example
 				</a>
 				<div className={"flex flex-col gap-4"}>
-					{passwordReset.isSuccess ? (
+					{passwordResetMutation.isSuccess ? (
 						<Card className="gap-4">
 							<CardHeader className="text-center gap-3">
 								<img
@@ -75,7 +81,7 @@ export function PasswordReset() {
 									Your password has been changed!
 								</CardTitle>
 								<CardDescription>
-									{passwordReset.data}
+									{passwordResetMutation.data}
 								</CardDescription>
 							</CardHeader>
 						</Card>
@@ -119,11 +125,14 @@ export function PasswordReset() {
 											)}
 										/>
 									</Field>
-									{passwordReset.error && (
+									{passwordResetMutation.error && (
 										<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
 											<AlertCircle className="size-5 stroke-red-500 stroke-2" />
 											<p className="text-sm text-red-500">
-												{passwordReset.error.message}
+												{
+													passwordResetMutation.error
+														.message
+												}
 											</p>
 										</div>
 									)}
@@ -131,15 +140,17 @@ export function PasswordReset() {
 										<Button
 											type="button"
 											onClick={() =>
-												passwordReset.mutate({
+												passwordResetMutation.mutate({
 													token: token || "",
 													password:
 														form.confirmPassword,
 												})
 											}
-											disabled={passwordReset.isPending}
+											disabled={
+												passwordResetMutation.isPending
+											}
 										>
-											{passwordReset.isPending ? (
+											{passwordResetMutation.isPending ? (
 												<Loader2 className="size-4 animate-spin" />
 											) : null}
 											Send

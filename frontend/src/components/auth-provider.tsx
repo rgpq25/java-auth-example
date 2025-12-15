@@ -48,17 +48,13 @@ type AuthContextValue = {
 	accessToken: string | null;
 	isAuthenticated: boolean;
 	isLoading: boolean;
-	register: UseMutationResult<string, Error, RegisterForm>;
-	login: UseMutationResult<string, Error, LoginForm>;
-	resendVerificationEmail: UseMutationResult<string, Error, void>;
+	register: (data: RegisterForm) => Promise<string>;
+	login: (data: LoginForm) => Promise<string>;
+	resendVerificationEmail: () => Promise<string>;
 	verifyEmail: (data: string) => Promise<string>;
-	passwordRequestReset: UseMutationResult<
-		string,
-		Error,
-		dtoPasswordRequestReset
-	>;
-	passwordReset: UseMutationResult<string, Error, dtoPasswordReset>;
-	logout: UseMutationResult<string, Error, void>;
+	passwordRequestReset: (data: dtoPasswordRequestReset) => Promise<string>;
+	passwordReset: (data: dtoPasswordReset) => Promise<string>;
+	logout: () => Promise<string>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -155,9 +151,8 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 		return () => api.interceptors.response.eject(refreshInterceptor);
 	}, [saveAccessToken]);
 
-	const register = useMutation({
-		retry: false,
-		mutationFn: async (data: RegisterForm) => {
+	const register = useCallback(
+		async (data: RegisterForm) => {
 			try {
 				const response = await api.post<AuthResponse>(
 					"/auth/register",
@@ -178,11 +173,11 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 				throw new Error("Something went wrong!");
 			}
 		},
-	});
+		[saveAccessToken]
+	);
 
-	const login = useMutation({
-		retry: false,
-		mutationFn: async (credentials: LoginForm) => {
+	const login = useCallback(
+		async (credentials: LoginForm) => {
 			try {
 				const response = await api.post<AuthResponse>(
 					"/auth/login-credentials",
@@ -203,25 +198,21 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 				throw new Error("Something went wrong!");
 			}
 		},
-	});
+		[saveAccessToken]
+	);
 
-	const resendVerificationEmail = useMutation({
-		retry: false,
-		mutationFn: async () => {
-			try {
-				await api.post("/auth/email/resend");
+	const resendVerificationEmail = useCallback(async () => {
+		try {
+			await api.post("/auth/email/resend");
 
-				return "Successfully sent verification email!";
-			} catch {
-				throw new Error("Something went wrong!");
-			}
-		},
-	});
+			return "Successfully sent verification email!";
+		} catch {
+			throw new Error("Something went wrong!");
+		}
+	}, []);
 
 	const verifyEmail = useCallback(async (token: string) => {
 		try {
-			await new Promise((res) => setTimeout(res, 2000));
-
 			await api.post("/auth/email/verify", { token });
 
 			setUser((prev) => (prev ? { ...prev, emailVerified: true } : prev));
@@ -240,9 +231,8 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 		}
 	}, []);
 
-	const passwordRequestReset = useMutation({
-		retry: false,
-		mutationFn: async (request: dtoPasswordRequestReset) => {
+	const passwordRequestReset = useCallback(
+		async (request: dtoPasswordRequestReset) => {
 			try {
 				await api.post("/auth/password/request-reset", request);
 
@@ -251,43 +241,38 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 				throw new Error("Something went wrong!");
 			}
 		},
-	});
+		[]
+	);
 
-	const passwordReset = useMutation({
-		retry: false,
-		mutationFn: async (request: dtoPasswordReset) => {
-			try {
-				await api.post("/auth/password/reset", request);
+	const passwordReset = useCallback(async (request: dtoPasswordReset) => {
+		try {
+			await api.post("/auth/password/reset", request);
 
-				return "Successfully changed your password! Head back and login with your credentials.";
-			} catch (error: unknown) {
-				if (error instanceof AxiosError) {
-					const errStatus = error.status;
-					if (errStatus === 400) {
-						throw new Error("Invalid password reset link.");
-					}
+			return "Successfully changed your password! Head back and login with your credentials.";
+		} catch (error: unknown) {
+			if (error instanceof AxiosError) {
+				const errStatus = error.status;
+				if (errStatus === 400) {
+					throw new Error("Invalid password reset link.");
 				}
-
-				throw new Error("Something went wrong!");
 			}
-		},
-	});
 
-	const logout = useMutation({
-		retry: false,
-		mutationFn: async () => {
-			try {
-				await api.post("/auth/logout");
+			throw new Error("Something went wrong!");
+		}
+	}, []);
 
-				return "Successfully logged out!";
-			} catch {
-				throw new Error("Something went wrong!");
-			} finally {
-				saveAccessToken(null);
-				navigate("/login", { replace: true });
-			}
-		},
-	});
+	const logout = useCallback(async () => {
+		try {
+			await api.post("/auth/logout");
+
+			return "Successfully logged out!";
+		} catch {
+			throw new Error("Something went wrong!");
+		} finally {
+			saveAccessToken(null);
+			navigate("/login", { replace: true });
+		}
+	}, [saveAccessToken, navigate]);
 
 	const isAuthenticated = !!user;
 
