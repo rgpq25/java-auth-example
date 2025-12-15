@@ -4,17 +4,14 @@
 
 import { api } from "@/api/api-client";
 import type {
+	dtoLogin,
 	dtoPasswordRequestReset,
 	dtoPasswordReset,
-	LoginForm,
-	RegisterForm,
+	dtoRegister,
+	dtoVerifyEmail,
 	User,
 } from "@/lib/types";
-import {
-	useMutation,
-	useQuery,
-	type UseMutationResult,
-} from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { jwtDecode } from "jwt-decode";
 import {
@@ -48,10 +45,10 @@ type AuthContextValue = {
 	accessToken: string | null;
 	isAuthenticated: boolean;
 	isLoading: boolean;
-	register: (data: RegisterForm) => Promise<string>;
-	login: (data: LoginForm) => Promise<string>;
+	register: (data: dtoRegister) => Promise<string>;
+	login: (data: dtoLogin) => Promise<string>;
 	resendVerificationEmail: () => Promise<string>;
-	verifyEmail: (data: string) => Promise<string>;
+	verifyEmail: (data: dtoVerifyEmail) => Promise<string>;
 	passwordRequestReset: (data: dtoPasswordRequestReset) => Promise<string>;
 	passwordReset: (data: dtoPasswordReset) => Promise<string>;
 	logout: () => Promise<string>;
@@ -152,7 +149,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 	}, [saveAccessToken]);
 
 	const register = useCallback(
-		async (data: RegisterForm) => {
+		async (data: dtoRegister) => {
 			try {
 				const response = await api.post<AuthResponse>(
 					"/auth/register",
@@ -177,11 +174,11 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 	);
 
 	const login = useCallback(
-		async (credentials: LoginForm) => {
+		async (data: dtoLogin) => {
 			try {
 				const response = await api.post<AuthResponse>(
 					"/auth/login-credentials",
-					credentials
+					data
 				);
 				saveAccessToken(response.data.accessToken);
 
@@ -211,9 +208,9 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 		}
 	}, []);
 
-	const verifyEmail = useCallback(async (token: string) => {
+	const verifyEmail = useCallback(async (data: dtoVerifyEmail) => {
 		try {
-			await api.post("/auth/email/verify", { token });
+			await api.post("/auth/email/verify", data);
 
 			setUser((prev) => (prev ? { ...prev, emailVerified: true } : prev));
 
@@ -244,9 +241,9 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 		[]
 	);
 
-	const passwordReset = useCallback(async (request: dtoPasswordReset) => {
+	const passwordReset = useCallback(async (data: dtoPasswordReset) => {
 		try {
-			await api.post("/auth/password/reset", request);
+			await api.post("/auth/password/reset", data);
 
 			return "Successfully changed your password! Head back and login with your credentials.";
 		} catch (error: unknown) {

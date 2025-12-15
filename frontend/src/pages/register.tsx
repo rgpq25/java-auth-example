@@ -18,11 +18,16 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import type { RegisterForm } from "@/lib/types";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+
+type RegisterForm = {
+	name: string;
+	email: string;
+	password: string;
+};
 
 export function Register() {
 	const { isAuthenticated, isLoading, register } = useAuth();

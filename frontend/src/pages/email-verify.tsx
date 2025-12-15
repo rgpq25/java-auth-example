@@ -28,11 +28,10 @@ export function VerifyEmail() {
 	const verifyEmailQuery = useQuery({
 		queryKey: ["verifyEmail", token],
 		queryFn: async () => {
-			return await verifyEmail(token!);
+			return await verifyEmail({ token: token! });
 		},
 		gcTime: 0,
-		enabled:
-			!!token && isAuthenticated && !user?.emailVerified,
+		enabled: !!token && isAuthenticated && !user?.emailVerified,
 		retry: false,
 		refetchOnWindowFocus: false,
 	});

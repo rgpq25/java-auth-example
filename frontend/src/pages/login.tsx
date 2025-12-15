@@ -18,11 +18,15 @@ import {
 	FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import type { LoginForm } from "@/lib/types";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+
+type LoginForm = {
+	email: string;
+	password: string;
+};
 
 export function Login() {
 	const { isAuthenticated, isLoading, login } = useAuth();

@@ -1,20 +1,16 @@
-export type RegisterForm = {
+export type dtoRegister = {
 	name: string;
 	email: string;
 	password: string;
 };
 
-export type LoginForm = {
+export type dtoLogin = {
 	email: string;
 	password: string;
 };
 
-export type User = {
-	id: number;
-	email: string;
-	emailVerified: boolean;
-	name: string;
-	profilePicture: string | null;
+export type dtoVerifyEmail = {
+	token: string;
 };
 
 export type dtoPasswordRequestReset = {
@@ -24,4 +20,12 @@ export type dtoPasswordRequestReset = {
 export type dtoPasswordReset = {
 	token: string;
 	password: string;
+};
+
+export type User = {
+	id: number;
+	email: string;
+	emailVerified: boolean;
+	name: string;
+	profilePicture: string | null;
 };
