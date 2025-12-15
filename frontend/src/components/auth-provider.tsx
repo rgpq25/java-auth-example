@@ -12,7 +12,7 @@ import type {
 	User,
 } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { AxiosError } from "axios";
+import { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { jwtDecode } from "jwt-decode";
 import {
 	createContext,
@@ -24,6 +24,8 @@ import {
 	type PropsWithChildren,
 } from "react";
 import { useNavigate } from "react-router-dom";
+
+type RetryableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
 
 type JwtPayload = {
 	jti: string;
@@ -101,12 +103,14 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 	});
 
 	useLayoutEffect(() => {
-		const authInterceptor = api.interceptors.request.use((config) => {
-			if (!config._retry && accessToken) {
-				config.headers.Authorization = `Bearer ${accessToken}`;
+		const authInterceptor = api.interceptors.request.use(
+			(config: RetryableRequest) => {
+				if (!config._retry && accessToken) {
+					config.headers.Authorization = `Bearer ${accessToken}`;
+				}
+				return config;
 			}
-			return config;
-		});
+		);
 
 		return () => api.interceptors.request.eject(authInterceptor);
 	}, [accessToken]);
