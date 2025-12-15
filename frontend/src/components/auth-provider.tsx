@@ -47,7 +47,7 @@ type AuthContextValue = {
 	register: UseMutationResult<string, Error, RegisterForm>;
 	login: UseMutationResult<string, Error, LoginForm>;
 	resendVerificationEmail: UseMutationResult<string, Error, void>;
-	verifyEmail: UseMutationResult<string, Error, string>;
+	verifyEmail: (data: string) => Promise<string>;
 	passwordRequestReset: UseMutationResult<
 		string,
 		Error,
@@ -214,33 +214,27 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 		},
 	});
 
-	const verifyEmail = useMutation({
-		retry: false,
-		mutationFn: async (code: string) => {
-			try {
-				await api.post("/auth/email/verify", { code });
+	const verifyEmail = useCallback(async (token: string) => {
+		try {
+			await new Promise((res) => setTimeout(res, 2000));
 
-				setUser((prev) =>
-					prev ? { ...prev, emailVerified: true } : prev
-				);
+			await api.post("/auth/email/verify", { token });
 
-				return "Successfully verified your account!";
-			} catch (error: unknown) {
-				if (error instanceof AxiosError) {
-					const errStatus = error.status;
-					if (errStatus === 400) {
-						throw new Error("Invalid verification code");
-					}
+			setUser((prev) => (prev ? { ...prev, emailVerified: true } : prev));
 
-					if (errStatus === 410) {
-						throw new Error("Verification code has expired");
-					}
+			return "Successfully verified your account. We're sending you to your profile.";
+		} catch (error: unknown) {
+			if (error instanceof AxiosError) {
+				if (error.status === 400) {
+					throw new Error(
+						"The verification link is invalid. Please make sure your heading to the link we sent you."
+					);
 				}
-
-				throw new Error("Something went wrong!");
 			}
-		},
-	});
+
+			throw new Error("Something went wrong. Please try again later.");
+		}
+	}, []);
 
 	const passwordRequestReset = useMutation({
 		retry: false,
@@ -268,10 +262,6 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 					if (errStatus === 400) {
 						throw new Error("Invalid password reset code");
 					}
-
-					if (errStatus === 410) {
-						throw new Error("Password reset code has expired");
-					}
 				}
 
 				throw new Error("Something went wrong!");
@@ -285,12 +275,12 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 			try {
 				await api.post("/auth/logout");
 
-				saveAccessToken(null);
-				navigate("/login", { replace: true });
-
 				return "Successfully logged out!";
 			} catch {
 				throw new Error("Something went wrong!");
+			} finally {
+				saveAccessToken(null);
+				navigate("/login", { replace: true });
 			}
 		},
 	});

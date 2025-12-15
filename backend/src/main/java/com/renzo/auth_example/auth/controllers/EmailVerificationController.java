@@ -19,7 +19,7 @@ public class EmailVerificationController {
 
     @PostMapping("/resend")
     public ResponseEntity<Void> resendVerificationEmail(Authentication authentication) {
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
+        UserDetails principal = (UserDetails) authentication.getPrincipal(); // TODO: If the user is already verified, just throw an error here.
         emailVerificationService.sendVerificationEmail(principal.getUsername());
 
         return ResponseEntity.noContent().build();
@@ -30,7 +30,7 @@ public class EmailVerificationController {
             @Valid @RequestBody VerifyEmailRequest request,
             Authentication authentication
     ) {
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
+        UserDetails principal = (UserDetails) authentication.getPrincipal(); // TODO: If the user is already verified, just throw an error here.
         emailVerificationService.verifyEmail(request.token(), principal.getUsername());
 
         return ResponseEntity.noContent().build();
