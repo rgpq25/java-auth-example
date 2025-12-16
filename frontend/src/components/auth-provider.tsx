@@ -1,7 +1,3 @@
-// TODO: all the mutations used here are a global state.
-// TODO: if you request a password change, go back to login, and request it again, the mutation is still successfull.
-// TODO: the auth actions need to be moved elsewhere.
-
 import { api } from "@/api/api-client";
 import { AuthContext, type AuthContextValue } from "@/hooks/use-auth";
 import type {

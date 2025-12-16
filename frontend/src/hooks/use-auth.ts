@@ -14,7 +14,10 @@ export type AuthContextValue = {
 	isAuthenticated: boolean;
 	isLoading: boolean;
 	register: (data: dtoRegister) => Promise<string>;
-	login: (data: dtoLogin) => Promise<string>;
+	login: (
+		provider: "credentials" | "google",
+		data: dtoLogin
+	) => Promise<string>;
 	resendVerificationEmail: () => Promise<string>;
 	verifyEmail: (data: dtoVerifyEmail) => Promise<string>;
 	passwordRequestReset: (data: dtoPasswordRequestReset) => Promise<string>;
