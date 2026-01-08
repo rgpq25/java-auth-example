@@ -16,7 +16,7 @@ export type AuthContextValue = {
 	register: (data: dtoRegister) => Promise<string>;
 	login: (
 		provider: "credentials" | "google",
-		data: dtoLogin
+		data?: dtoLogin
 	) => Promise<string>;
 	resendVerificationEmail: () => Promise<string>;
 	verifyEmail: (data: dtoVerifyEmail) => Promise<string>;

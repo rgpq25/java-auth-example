@@ -157,26 +157,35 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 	);
 
 	const login = useCallback(
-		async (data: dtoLogin) => {
-			try {
-				const response = await api.post<AuthResponse>(
-					"/auth/login-credentials",
-					data
-				);
-				saveAccessToken(response.data.accessToken);
+		async (provider: "credentials" | "google", data?: dtoLogin) => {
+			if (provider === "credentials") {
+				try {
+					const response = await api.post<AuthResponse>(
+						"/auth/login-credentials",
+						data
+					);
+					saveAccessToken(response.data.accessToken);
 
-				return "Successfully logged in!";
-			} catch (error: unknown) {
-				saveAccessToken(null);
+					return "Successfully logged in!";
+				} catch (error: unknown) {
+					saveAccessToken(null);
 
-				if (error instanceof AxiosError) {
-					if (error.status === 401) {
-						throw new Error("Invalid email or password");
+					if (error instanceof AxiosError) {
+						if (error.status === 401) {
+							throw new Error("Invalid email or password");
+						}
 					}
-				}
 
-				throw new Error("Something went wrong!");
+					throw new Error("Something went wrong!");
+				}
 			}
+			if (provider === "google") {
+				return "Not implemented yet";
+			}
+
+			throw new Error(
+				"Invalid provider, please only use 'credentials' or 'google'."
+			);
 		},
 		[saveAccessToken]
 	);

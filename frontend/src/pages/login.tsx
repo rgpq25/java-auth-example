@@ -47,7 +47,10 @@ export function Login() {
 
 	const loginMutation = useMutation({
 		retry: false,
-		mutationFn: login,
+		mutationFn: (variables: {
+			provider: "credentials" | "google";
+			data: LoginForm;
+		}) => login(variables.provider, variables.data),
 	});
 
 	if (isLoading) return <AuthLoading />;
@@ -83,6 +86,11 @@ export function Login() {
 										variant="outline"
 										type="button"
 										className="items-center flex"
+										onClick={() => {
+											const apiUrl = import.meta.env
+												.VITE_API_URL;
+											window.location.href = `${apiUrl}/oauth2/authorization/google`;
+										}}
 									>
 										<img
 											src={GoogleIcon}
@@ -141,7 +149,10 @@ export function Login() {
 									<Button
 										type="button"
 										onClick={() =>
-											loginMutation.mutate(form)
+											loginMutation.mutate({
+												provider: "credentials",
+												data: form,
+											})
 										}
 										disabled={loginMutation.isPending}
 									>
