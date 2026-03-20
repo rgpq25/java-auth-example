@@ -51,6 +51,16 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User createOAuthUser(String name, String email, boolean emailVerified, String profileImage) {
+        userRepository.findByEmail(email)
+                .ifPresent(u -> {
+                    throw new DataIntegrityViolationException("User with email already exists: " + email);
+                });
+
+        User user = new User(name, email, emailVerified, profileImage);
+        return userRepository.save(user);
+    }
+
     public UserResponse updateUser(Long id, UserUpdateRequest userRequest) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("id", id));

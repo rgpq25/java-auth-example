@@ -37,6 +37,24 @@ public class AccountService {
         return accountRepository.save(account);
     }
 
+    public Optional<Account> findByAccountIdAndProviderId(String accountId, Account.ProviderType providerId) {
+        return accountRepository.findByAccountIdAndProviderId(accountId, providerId);
+    }
+
+    public Account createGoogleAccount(final User user, String googleAccountId) {
+        Account account = new Account(
+                user,
+                googleAccountId,
+                Account.ProviderType.GOOGLE,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        return accountRepository.save(account);
+    }
+
     public Account updateAccount(Account account) {
         return accountRepository.save(account);
     }

@@ -52,6 +52,8 @@ export function Register() {
 		mutationFn: register,
 	});
 
+	const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
+
 	if (isLoading) return <AuthLoading />;
 
 	if (isAuthenticated === true) return <Navigate to="/profile" replace />;
@@ -86,6 +88,9 @@ export function Register() {
 										type="button"
 										className="items-center flex"
 										disabled={registerMutation.isPending}
+										onClick={() => {
+											window.location.href = `${apiUrl}/oauth2/authorization/google`;
+										}}
 									>
 										<img
 											src={GoogleIcon}

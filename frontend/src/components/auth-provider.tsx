@@ -180,7 +180,9 @@ export default function AuthProvider({ children }: AuthProviderProps) {
 				}
 			}
 			if (provider === "google") {
-				return "Not implemented yet";
+				const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
+				window.location.href = `${apiUrl}/oauth2/authorization/google`;
+				return "Redirecting to Google login...";
 			}
 
 			throw new Error(

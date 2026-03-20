@@ -1,6 +1,8 @@
 package com.renzo.auth_example.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.renzo.auth_example.auth.handlers.OAuth2AuthenticationFailureHandler;
+import com.renzo.auth_example.auth.handlers.OAuth2AuthenticationSuccessHandler;
 import com.renzo.auth_example.auth.models.RefreshToken;
 import com.renzo.auth_example.auth.repositories.RefreshTokenRepository;
 import com.renzo.auth_example.common.ErrorResponse;
@@ -16,7 +18,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,17 +31,23 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final RefreshTokenRepository refreshTokenRepository;
     private final ObjectMapper objectMapper;
+    private final OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler;
 
     public SecurityConfig (
             AuthenticationProvider authenticationProvider,
             JwtAuthFilter jwtAuthFilter,
             RefreshTokenRepository refreshTokenRepository,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler,
+            OAuth2AuthenticationFailureHandler oauth2AuthenticationFailureHandler
     ) {
         this.authenticationProvider = authenticationProvider;
         this.jwtAuthFilter = jwtAuthFilter;
         this.refreshTokenRepository = refreshTokenRepository;
         this.objectMapper = objectMapper;
+        this.oauth2AuthenticationSuccessHandler = oauth2AuthenticationSuccessHandler;
+        this.oauth2AuthenticationFailureHandler = oauth2AuthenticationFailureHandler;
     }
 
     @Bean
@@ -52,13 +59,19 @@ public class SecurityConfig {
                                 "/auth/register",
                                 "/auth/login-credentials",
                                 "/auth/refresh",
-                                "/auth/password/**"
+                                "/auth/password/**",
+                                "/oauth2/**",
+                                "/login/oauth2/**"
                         ).permitAll()
                         .requestMatchers("/public/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authenticationProvider(authenticationProvider)
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oauth2AuthenticationSuccessHandler)
+                        .failureHandler(oauth2AuthenticationFailureHandler)
+                )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         // Missing/invalid credentials → 401

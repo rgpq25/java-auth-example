@@ -21,7 +21,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, GalleryVerticalEnd, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 
 type LoginForm = {
 	email: string;
@@ -30,6 +30,7 @@ type LoginForm = {
 
 export function Login() {
 	const { isAuthenticated, isLoading, login } = useAuth();
+	const [searchParams] = useSearchParams();
 
 	const [form, setForm] = useState<LoginForm>({
 		email: "",
@@ -52,6 +53,16 @@ export function Login() {
 			data: LoginForm;
 		}) => login(variables.provider, variables.data),
 	});
+
+	const oauthError = searchParams.get("oauthError");
+	const oauthErrorMessage =
+		oauthError === "email_already_registered"
+			? "This email is already registered with email and password."
+			: oauthError
+				? "Google login failed. Please try again."
+				: null;
+
+	const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080";
 
 	if (isLoading) return <AuthLoading />;
 
@@ -87,8 +98,6 @@ export function Login() {
 										type="button"
 										className="items-center flex"
 										onClick={() => {
-											const apiUrl = import.meta.env
-												.VITE_API_URL;
 											window.location.href = `${apiUrl}/oauth2/authorization/google`;
 										}}
 									>
@@ -136,10 +145,18 @@ export function Login() {
 										value={form.password}
 										onChange={handleChange("password")}
 									/>
-								</Field>
-								{loginMutation.error && (
-									<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
-										<AlertCircle className="size-5 stroke-red-500 stroke-2" />
+									</Field>
+									{oauthErrorMessage && (
+										<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
+											<AlertCircle className="size-5 stroke-red-500 stroke-2" />
+											<p className="text-sm text-red-500">
+												{oauthErrorMessage}
+											</p>
+										</div>
+									)}
+									{loginMutation.error && (
+										<div className="rounded-sm border border-red-500 bg-red-100/80 px-3 py-3 flex flex-row items-center gap-2">
+											<AlertCircle className="size-5 stroke-red-500 stroke-2" />
 										<p className="text-sm text-red-500">
 											{loginMutation.error.message}
 										</p>
